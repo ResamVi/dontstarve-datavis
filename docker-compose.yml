@@ -2,8 +2,13 @@ version: '3'
 
 services:
   db:
-    image: "mongo:latest"
+    image: "postgres:latest"
+    container_name: "db"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-  
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydatabase
+    volumes:
+      - ./volume:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'

@@ -1,57 +1,110 @@
 import time
-import re
+import datetime
+import logging
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 
-from webdriver_manager.firefox import GeckoDriverManager
+from bs4 import BeautifulSoup
+
+from webdriver_manager.chrome import ChromeDriverManager
+
+from parser_functions import parse_server, parse_player
+
+logging.basicConfig(format="[%(asctime)s] %(message)s")
+logging.getLogger().setLevel(logging.INFO)
+
+"""
+from pony.orm import *
+
+db = Database()
+
+class Server(db.Entity):
+    id          = PrimaryKey(int, auto=True)
+    group       = Required(int)
+    name        = Required(str)
+    lp          = Required(int)
+    wins        = Required(int)
+    losses      = Required(int)
+    date        = Required(datetime.datetime)
+    summonerId  = Required(str)
+
+class Player(db.Entity):
+
+
+db.bind(provider='postgres', user='root', password='password', host='localhost', database='mydatabase')
+db.generate_mapping(create_tables=True)
+"""
+# ----------------------------------------------------------------
 
 # Headless mode to not open a browser and run this on a vps
 options = Options()
 options.headless = False
 
 # Use firefox because chrome throws a bluetooth error lol
-driver = webdriver.Firefox(options=options, executable_path=GeckoDriverManager().install())
+driver = webdriver.Chrome(ChromeDriverManager().install())
 
 # Loading times on the website are yuge
-driver.implicitly_wait(20)
+driver.implicitly_wait(5)
 driver.get("https://dstserverlist.appspot.com/")
 
-player_pattern = re.compile(r'(\w+)')
-char_pattern = re.compile(r'\[(.+)\]')
+# Remove cookie notification
+driver.find_element_by_xpath("//a[@aria-label='dismiss cookie message']").click()
 
-# Iterate all pages
-while True:
-    servers = driver.find_elements_by_class_name("serverlist-entry") # 50 servers on a page
+driver.execute_script("window.scrollTo(0,3000);")
+driver.find_elements_by_class_name("page")[-1].click()
 
-    # Click on every server to load the list of players into the modal
-    for server in servers:
-        server.click()
-
-        # Retrieve players from modal
-        players = driver.find_elements_by_xpath("//div[@id='players']//div[@class='col s12 m6 l3']")
-
-        for player in players:
-            player_html = player.get_attribute("innerHTML")
-
-            # strip <a>-tags if it exists and trailing/leading whitespace
-            player_html = re.sub(r'<a.+\">', '', player_html)
-            player_html = re.sub(r'</a>', '', player_html) 
-            player_html = player_html.strip()
-
-            # player name
-            player = player_pattern.search(player_html).group(1)
-            print("Player: " + player)
+def start_scraping():
+    
+    # Iterate all pages
+    page_index = 1
+    
+    while True:
+        pageX = 50
+        start_time = time.time()
+        
+        # Click on every server to load the list of players into the modal
+        servers = driver.find_elements_by_class_name("serverlist-entry")
+        for server in servers:
+            server_html = server.get_attribute("innerHTML")
+            parse_server(server_html)
             
-            # character name
-            character = char_pattern.search(player_html)
-            character = "TBD" if character is None else character.group(1)
-            
-            print("Character: " + character)
-            print("")
+            try:
+                server.click()
+            except:
+                continue
 
-        # navigate back to main menu
-        webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            # Retrieve players from modal
+            players = driver.find_elements_by_xpath("//div[@id='players']//div[@class='col s12 m6 l3']")
+            for player in players:
+                player_html = player.get_attribute("innerHTML")
+                parse_player(player_html)
 
-driver.close()
+            # navigate back to main menu
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).pause(2).perform()
+
+            # Scroll down a bit
+            driver.execute_script("window.scrollTo(0," + str(pageX) + ");")
+            pageX += 50
+
+        # Get button to next page
+        for button in driver.find_elements_by_class_name("page"):
+            if button.text == str(page_index + 1):
+                button.click()
+                break
+        else:
+            driver.close() # No more pages found
+            logging.info("No more pages found: %d pages parsed", page_index)
+            return
+        
+        driver.execute_script("window.scrollTo(0,0);")
+        
+        # Track and log elapsed time
+        elapsed_time = time.time() - start_time
+        logging.warning("Parsed page %d in %s", page_index, time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+        
+        page_index += 1
+
+
+start_scraping()
