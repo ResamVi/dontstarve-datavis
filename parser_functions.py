@@ -6,11 +6,22 @@ from pony   import orm
 from bs4    import BeautifulSoup
 from model  import db
 
-# We only need the text of the <div> that makes up a server entry in the list
-# Sequence is: name, platform, online, mode, season
+online_pattern = re.compile(r'(\w+)\/(\w+)')
+
+# We only need the text of the <div> that makes up a server entry in the list and some
+# data given in the attributes
 def parse_server(server_html):
-    soup = BeautifulSoup(server_html, 'html.parser').stripped_strings
-    return next(soup), next(soup), next(soup), next(soup), next(soup)
+    soup = BeautifulSoup(server_html, 'html.parser')
+    
+    origin = soup.td['data-country']
+    
+    _text = soup.stripped_strings
+    name, platform, online, mode, season = next(_text), next(_text), next(_text), next(_text), next(_text)
+    
+    _search = online_pattern.search(online)
+    current_online, max_online = _search.group(1), _search.group(2)
+
+    return name, origin, platform, current_online, max_online, mode, season
 
 player_pattern = re.compile(r'(\w+)')
 char_pattern = re.compile(r'\[(.+)\]')
@@ -36,15 +47,17 @@ def parse_player(player_html):
 def parse(server, players, cycle):
     # parse server
     server_html = server.get_attribute("innerHTML")
-    name, platform, online, mode, season = parse_server(server_html)
+    name, origin, platform, current_online, max_online, mode, season = parse_server(server_html)
 
     srv = db.Server(
-        cycle=cycle,
         name=name,
+        origin=origin,
         platform=platform,
-        online=online,
+        current_online=current_online,
+        max_online=max_online,
         mode=mode,
         season=season,
+        cycle=cycle,
         date=datetime.datetime.now()
     )
     logging.info("New Server: '%s'", srv.name)
