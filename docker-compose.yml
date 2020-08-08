@@ -1,6 +1,17 @@
 version: '3'
 
 services:
+  python:
+    build: .
+    container_name: "python"
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydatabase
+      - HEADLESS=true
+  
   db:
     image: "postgres:latest"
     container_name: "db"
