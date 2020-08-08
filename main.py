@@ -1,5 +1,4 @@
 import time
-import datetime
 import logging
 
 from selenium import webdriver
@@ -10,40 +9,22 @@ from bs4 import BeautifulSoup
 
 from webdriver_manager.chrome import ChromeDriverManager
 
-from parser_functions import parse_server, parse_player
+from parser_functions import parse
+from model import db
 
-logging.basicConfig(format="[%(asctime)s] %(message)s")
+# Logging init
+logging.basicConfig(format="[%(asctime)s]%(levelname)s — %(message)s")
 logging.getLogger().setLevel(logging.INFO)
 
-"""
-from pony.orm import *
-
-db = Database()
-
-class Server(db.Entity):
-    id          = PrimaryKey(int, auto=True)
-    group       = Required(int)
-    name        = Required(str)
-    lp          = Required(int)
-    wins        = Required(int)
-    losses      = Required(int)
-    date        = Required(datetime.datetime)
-    summonerId  = Required(str)
-
-class Player(db.Entity):
-
-
+# Database init
 db.bind(provider='postgres', user='root', password='password', host='localhost', database='mydatabase')
 db.generate_mapping(create_tables=True)
-"""
-# ----------------------------------------------------------------
 
-# Headless mode to not open a browser and run this on a vps
-options = Options()
+# Selenium init
+options = webdriver.ChromeOptions()
 options.headless = False
-
-# Use firefox because chrome throws a bluetooth error lol
-driver = webdriver.Chrome(ChromeDriverManager().install())
+options.add_argument("--start-maximized")
+driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
 
 # Loading times on the website are yuge
 driver.implicitly_wait(5)
@@ -52,8 +33,7 @@ driver.get("https://dstserverlist.appspot.com/")
 # Remove cookie notification
 driver.find_element_by_xpath("//a[@aria-label='dismiss cookie message']").click()
 
-driver.execute_script("window.scrollTo(0,3000);")
-driver.find_elements_by_class_name("page")[-1].click()
+# Determine cycle (whether or not previous queries exist)
 
 def start_scraping():
     
@@ -67,19 +47,15 @@ def start_scraping():
         # Click on every server to load the list of players into the modal
         servers = driver.find_elements_by_class_name("serverlist-entry")
         for server in servers:
-            server_html = server.get_attribute("innerHTML")
-            parse_server(server_html)
-            
             try:
                 server.click()
             except:
                 continue
 
-            # Retrieve players from modal
             players = driver.find_elements_by_xpath("//div[@id='players']//div[@class='col s12 m6 l3']")
-            for player in players:
-                player_html = player.get_attribute("innerHTML")
-                parse_player(player_html)
+            
+            # start parsing
+            parse(server, players, 1)
 
             # navigate back to main menu
             webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).pause(2).perform()
