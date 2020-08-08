@@ -1,7 +1,12 @@
 import time
 import logging
+import sys
+
+from os import environ as env
+from distutils import util
 
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 
@@ -17,14 +22,35 @@ logging.basicConfig(format="[%(asctime)s]%(levelname)s — %(message)s")
 logging.getLogger().setLevel(logging.INFO)
 
 # Database init
-db.bind(provider='postgres', user='root', password='password', host='localhost', database='mydatabase')
+for attempt in range(5): # 5 attempts
+    try:
+      db.bind(
+        provider='postgres',
+        user=env['POSTGRES_USER'],
+        password=env['POSTGRES_PASSWORD'],
+        host='db',
+        database=env['POSTGRES_DB']
+    )
+    except Exception:
+        logging.warning(e + "\nTry No. " + str(attempt + 1) + " failed.")
+        time.sleep(5)
+    else:
+        logging.warning("Database connection established")
+        break
+else:
+    sys.exit("Could not connect to database")
+
 db.generate_mapping(create_tables=True)
 
 # Selenium init
 options = webdriver.ChromeOptions()
-options.headless = False
+options.headless = bool(util.strtobool(env['HEADLESS']))
 options.add_argument("--start-maximized")
-driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+options.add_argument('--no-sandbox')       
+
+driver = webdriver.Remote("http://selenium:4444/wd/hub", DesiredCapabilities.CHROME)
+# driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+logging.warning("Remote Selenium connection established")
 
 # Loading times on the website are yuge
 driver.implicitly_wait(5)
@@ -82,5 +108,5 @@ def start_scraping():
         
         page_index += 1
 
-
+logging.warning("Start scraping")
 start_scraping()
