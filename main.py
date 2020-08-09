@@ -5,46 +5,42 @@ import sys
 from os import environ as env
 from distutils import util
 
-from selenium import webdriver
+from selenium                                       import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.keys                 import Keys
+from selenium.webdriver.common.by                   import By
+from selenium.webdriver.support.ui                  import WebDriverWait
+from selenium.webdriver.support                     import expected_conditions as expected
 
-from bs4 import BeautifulSoup
-
-from webdriver_manager.chrome import ChromeDriverManager
+from bs4                        import BeautifulSoup
+from pony                       import orm
+from webdriver_manager.chrome   import ChromeDriverManager
 
 from parser_functions import parse
 from model import db
 
 # Logging init
-logging.basicConfig(format="[%(asctime)s]%(levelname)s — %(message)s")
+logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
 logging.getLogger().setLevel(logging.INFO)
 
+# lazy solution to waiting on db container 
+logging.warning("Waiting ten seconds before starting") 
+time.sleep(10)
+
 # Database init
-for attempt in range(5): # 5 attempts
-    try:
-      db.bind(
-        provider='postgres',
-        user=env['POSTGRES_USER'],
-        password=env['POSTGRES_PASSWORD'],
-        host='db',
-        database=env['POSTGRES_DB']
-    )
-    except Exception as e:
-        logging.warning(e + "\nTry No. " + str(attempt + 1) + " failed.")
-        time.sleep(5)
-    else:
-        logging.warning("Database connection established")
-        break
-else:
-    sys.exit("Could not connect to database")
+db.bind(
+    provider='postgres',
+    user=env['POSTGRES_USER'],
+    password=env['POSTGRES_PASS'],
+    host='db',
+    database=env['POSTGRES_DB']
+)
 
 db.generate_mapping(create_tables=True)
 
 # Selenium init
 options = webdriver.ChromeOptions()
-options.headless = bool(util.strtobool(env['HEADLESS']))
+options.headless = True
 options.add_argument("--start-maximized")
 options.add_argument('--no-sandbox')       
 
@@ -53,7 +49,6 @@ driver = webdriver.Remote("http://selenium:4444/wd/hub", DesiredCapabilities.CHR
 logging.warning("Remote Selenium connection established")
 
 # Loading times on the website are yuge
-driver.implicitly_wait(5)
 driver.get("https://dstserverlist.appspot.com/")
 
 # Remove cookie notification
@@ -61,7 +56,7 @@ driver.find_element_by_xpath("//a[@aria-label='dismiss cookie message']").click(
 
 # Determine cycle (whether or not previous queries exist)
 
-def start_scraping():
+def start_scraping(cycle):
     
     # Iterate all pages
     page_index = 1
@@ -70,21 +65,26 @@ def start_scraping():
         pageX = 50
         start_time = time.time()
         
-        # Click on every server to load the list of players into the modal
+        WebDriverWait(driver, 10).until(expected.element_to_be_clickable((By.CLASS_NAME, "serverlist-entry")))
         servers = driver.find_elements_by_class_name("serverlist-entry")
+
+        # Click on every server to load the list of players into the modal
         for server in servers:
+            server.click()
+
+            # Wait for Player List to load
+            # If "Error: Server does not exist" will be displayed a timeout occurs
             try:
-                server.click()
+                WebDriverWait(driver, 5).until(expected.presence_of_element_located((By.XPATH, "//div[@id='players']//div[@class='col s12 m6 l3']")))
+                players = driver.find_elements_by_xpath("//div[@id='players']//div[@class='col s12 m6 l3']")
+                
+                # start parsing
+                parse(server, players, cycle)
             except:
-                continue
-
-            players = driver.find_elements_by_xpath("//div[@id='players']//div[@class='col s12 m6 l3']")
+                pass
             
-            # start parsing
-            parse(server, players, 1)
-
             # navigate back to main menu
-            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).pause(2).perform()
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
 
             # Scroll down a bit
             driver.execute_script("window.scrollTo(0," + str(pageX) + ");")
@@ -108,5 +108,13 @@ def start_scraping():
         
         page_index += 1
 
-logging.warning("Start scraping")
-start_scraping()
+# Start and continue forever
+with orm.db_session:
+    logging.warning("Start scraping")
+
+    cycle = 1 + db.select('MAX(cycle) FROM player')[0] # Continue cycle number if previous exist
+
+    while True:
+        start_scraping(cycle)
+        cycle += 1
+        logging.warning("Cycle finished. Now starting Cycle " + str(cycle))
