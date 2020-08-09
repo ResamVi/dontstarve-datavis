@@ -31,7 +31,7 @@ for attempt in range(5): # 5 attempts
         host='db',
         database=env['POSTGRES_DB']
     )
-    except Exception:
+    except Exception as e:
         logging.warning(e + "\nTry No. " + str(attempt + 1) + " failed.")
         time.sleep(5)
     else:
