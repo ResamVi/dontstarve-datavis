@@ -118,3 +118,5 @@ with orm.db_session:
         start_scraping(cycle)
         cycle += 1
         logging.warning("Cycle finished. Now starting Cycle " + str(cycle))
+
+# TODO: Show progress (3/165) of tables
