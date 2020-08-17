@@ -1,122 +1,129 @@
-import time
+import datetime
+import requests
 import logging
-import sys
+import json
+import time
+import os
 
-from os import environ as env
-from distutils import util
+from pprint import pprint
+from dotenv import load_dotenv
+from geoip  import geolite2
+from pony   import orm
+from model  import db
 
-from selenium                                       import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.common.keys                 import Keys
-from selenium.webdriver.common.by                   import By
-from selenium.webdriver.support.ui                  import WebDriverWait
-from selenium.webdriver.support                     import expected_conditions as expected
+# static variables
+endpoints = [
+    "https://lobby-us.kleientertainment.com/lobby/read",
+    "https://lobby-eu.kleientertainment.com/lobby/read",
+    "https://lobby-china.kleientertainment.com/lobby/read",
+    "https://lobby-sing.kleientertainment.com/lobby/read"
+]
 
-from bs4                        import BeautifulSoup
-from pony                       import orm
-from webdriver_manager.chrome   import ChromeDriverManager
+# Convert platform number to name (see: https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data/?do=findComment&comment=1306033)
+platforms = lambda i : {0: 'None', 1: 'Steam', 2: 'PSN', 4: 'TGP', 8: 'WeGame / QQgame', 10: 'XBLIVE'}.get(i, 'Invalid')
 
-from parser_functions import parse
-from model import db
-
-# Logging init
+# Logging
 logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
 logging.getLogger().setLevel(logging.INFO)
 
-# lazy solution to waiting on db container 
-logging.warning("Waiting ten seconds before starting") 
-time.sleep(10)
+# lazy solution to waiting on db docker container to finish loading
+#logging.warning("Waiting ten seconds before starting") 
+#time.sleep(10)
+
+# Load .env file
+load_dotenv()
 
 # Database init
 db.bind(
     provider='postgres',
-    user=env['POSTGRES_USER'],
-    password=env['POSTGRES_PASS'],
-    host='db',
-    database=env['POSTGRES_DB']
+    user=os.getenv('POSTGRES_USER'),
+    password=os.getenv('POSTGRES_PASS'),
+    database=os.getenv('POSTGRES_DB'),
+    host=os.getenv('HOST')
 )
 
 db.generate_mapping(create_tables=True)
 
-# Selenium init
-options = webdriver.ChromeOptions()
-options.headless = True
-options.add_argument("--start-maximized")
-options.add_argument('--no-sandbox')       
+@orm.db_session
+def main(endpoint, cycle):
 
-driver = webdriver.Remote("http://selenium:4444/wd/hub", DesiredCapabilities.CHROME)
-# driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-logging.warning("Remote Selenium connection established")
+    payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
+    r = requests.post(endpoint, data=payload)
+    servers = r.json()["GET"]
 
-# Loading times on the website are yuge
-driver.get("https://dstserverlist.appspot.com/")
+    f = open("output.txt", "a")
+    f.write(json.dumps(r.json(), indent=4, sort_keys=True))
+    f.close()
 
-# Remove cookie notification
-driver.find_element_by_xpath("//a[@aria-label='dismiss cookie message']").click()
+    for server in servers:
 
-# Determine cycle (whether or not previous queries exist)
+        # Get origin of server via IP
+        origin = geolite2.lookup(server["__addr"])
+        origin = origin.country if origin is not None else "None"
 
-def start_scraping(cycle):
+        srv = db.Server(
+            name=server["name"],
+            origin=origin,
+            platform=platforms(server["platform"]),
+            connected=server["connected"],
+            maxconnections=server["maxconnections"],
+            mode=server["mode"],
+            season=server["season"],
+            intent=server["intent"],
+            mods=server["mods"],
+            cycle=cycle,
+            date=datetime.datetime.now()
+        )
+        logging.info("New Server: '%s'", srv.name)
+        
+        #print("---")
+        #print("BEFORE")
+        #print(server["players"])
+
+        # Player list empty
+        if server["players"] == "return {  }":
+            continue
+
+        # List of players is not json ('return {...}' for whatever reason) 
+        # so we fix that with a lot of duct tape
+        players = server["players"] \
+            .replace("return {", "[") \
+            .replace('colour=', '"colour":') \
+            .replace('prefab=', '"prefab":') \
+            .replace('eventlevel=', '"eventlevel":') \
+            .replace('name=', '"name":') \
+            .replace('netid=', '"netid":') \
+            .replace("\n}", "]") \
+            .replace('["', '"') \
+            .replace('"]=', '":')
+
+        #print("AFTER")
+        #print(players)
+        #print("---")
+        players = json.loads(players)
+        
+        for player in players:
+            pl = db.Player(
+                cycle=cycle,
+                name=player["name"],
+                character=player["prefab"],
+                server=srv
+            )
+            logging.info("New Player: '%s'", pl.name)
     
-    # Iterate all pages
-    page_index = 1
-    
-    while True:
-        pageX = 50
-        start_time = time.time()
-        
-        WebDriverWait(driver, 10).until(expected.element_to_be_clickable((By.CLASS_NAME, "serverlist-entry")))
-        servers = driver.find_elements_by_class_name("serverlist-entry")
 
-        # Click on every server to load the list of players into the modal
-        for server in servers:
-            server.click()
+cycle = 1
+for endpoint in endpoints:
+    logging.warning("Endpoint: " + endpoint)
+    main(endpoint, cycle)
 
-            # Wait for Player List to load
-            # If "Error: Server does not exist" will be displayed a timeout occurs
-            try:
-                WebDriverWait(driver, 5).until(expected.presence_of_element_located((By.XPATH, "//div[@id='players']//div[@class='col s12 m6 l3']")))
-                players = driver.find_elements_by_xpath("//div[@id='players']//div[@class='col s12 m6 l3']")
-                
-                # start parsing
-                parse(server, players, cycle)
-            except:
-                pass
-            
-            # navigate back to main menu
-            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+# TODO: Web-Server: REST API
+# TODO: Check how many days in
+# TODO: Players inherit server's origin
+# TODO: time_characters: Date<wendy, wigfrid, wilson, ...>
+# TODO: time_origins: Date<China, USA>
 
-            # Scroll down a bit
-            driver.execute_script("window.scrollTo(0," + str(pageX) + ");")
-            pageX += 50
-
-        # Get button to next page
-        for button in driver.find_elements_by_class_name("page"):
-            if button.text == str(page_index + 1):
-                button.click()
-                break
-        else:
-            driver.close() # No more pages found
-            logging.info("No more pages found: %d pages parsed", page_index)
-            return
-        
-        driver.execute_script("window.scrollTo(0,0);")
-        
-        # Track and log elapsed time
-        elapsed_time = time.time() - start_time
-        logging.warning("Parsed page %d in %s", page_index, time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-        
-        page_index += 1
-
-# Start and continue forever
-with orm.db_session:
-    logging.warning("Start scraping")
-
-    cycle = 1 + db.select('MAX(cycle) FROM player')[0] # Continue cycle number if previous exist
-
-    while True:
-        start_scraping(cycle)
-        cycle += 1
-        logging.warning("Cycle finished. Now starting Cycle " + str(cycle))
-
-# TODO: Show progress (3/165) of tables
+# TODO: Chart of previous 24h time_characters
+# TODO: multiple series chart of previous 24h time_origins
+# TODO: bar Chart of Steam/TGP and
+# TODO: geo chart of player
