@@ -3,3 +3,4 @@ webdriver-manager==3.2.
 selenium==3.141.0
 pony==0.7.13
 psycopg2==2.8.5
+python-dotenv==0.14.0
