@@ -1,0 +1,23 @@
+# Counts
+SELECT (SELECT COUNT(*) FROM server) AS server_count, (SELECT COUNT(*) FROM player) AS player_count;
+server_count | player_count 
+--------------+--------------
+         9972 |        10695
+
+# Count by Origin
+SELECT origin, COUNT(origin) FROM server GROUP BY origin ORDER BY COUNT(origin) DESC;
+
+# Count by Platform
+SELECT platform, COUNT(platform) FROM server GROUP BY platform ORDER BY COUNT(platform) DESC;
+
+# Count by Intent
+SELECT intent, COUNT(intent) FROM server GROUP BY intent HAVING COUNT(intent) > 10 ORDER BY COUNT(intent) DESC;
+
+# Vanilla vs Non-Mods
+SELECT (SELECT COUNT(*) FROM server WHERE mods) AS modded, (SELECT COUNT(*) FROM server WHERE NOT mods) AS vanilla;
+
+# Count by season
+SELECT season, COUNT(season) FROM server WHERE season <> '' GROUP BY season ORDER BY COUNT(season) DESC;
+
+# Count characters
+SELECT character, COUNT(character) FROM player GROUP BY character ORDER BY COUNT(character) DESC;
