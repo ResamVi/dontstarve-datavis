@@ -9,11 +9,11 @@
         
         <div class="split">
             <div>
-                <h1>123456</h1>
+                <h1>{{ serverCount }}</h1>
                 <p>Servers analyzed</p>
             </div>
             <div>
-                <h1>12345</h1>
+                <h1>{{ playerCount }}</h1>
                 <p>Players found</p>
             </div>
         </div>
@@ -30,7 +30,7 @@
         <bar-chart :data="characters"></bar-chart>
 
         <h3 class="boxed">Amount of Servers by Country</h3>
-        <bar-chart :data="[['X-Small', 55], ['Small', 27], ['Hard', 22], ['Medium', 7]]"></bar-chart>
+        <bar-chart :data="serverOrigin"></bar-chart>
 
         <h3 class="boxed">
             Amount of Players by Country
@@ -42,34 +42,37 @@
                 </span>
             </a>
         </h3>
-        <bar-chart :data="[['X-Small', 55], ['Small', 27], ['Hard', 22], ['Medium', 7]]"></bar-chart>
+        <bar-chart :data="playerOrigin"></bar-chart>
 
         <h3 class="boxed">Map of Players by Country</h3>
-        <!-- https://github.com/paliari/v-autocomplete -->
-        <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="[['United States', 44], ['Germany', 23], ['Brazil', 22]]"></geo-chart>
+        <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="playerOrigin"></geo-chart>
 
         <h3 class="boxed">Character Choice by Region</h3>
-        <bar-chart :data="[['X-Small', 55], ['Small', 27], ['Hard', 22], ['Medium', 7]]"></bar-chart>
+        <div class="center">
+            <autocomplete id="inputfield" :search="search" placeholder="United States" @submit="submit"></autocomplete>
+        </div>
+
+        <bar-chart :data="charactersOrigin"></bar-chart>
 
         <div class="split">
             <div>
                 <h3 class="boxed">Servers by Platform</h3>
-                <pie-chart :data="[['Blueberry', 44], ['Strawberry', 23]]"></pie-chart>
+                <pie-chart :data="platformCount"></pie-chart>
             </div>
             <div>
                 <h3 class="boxed">Vanilla vs Modded Servers</h3>
-                <pie-chart :data="[['Blueberry', 6], ['Strawberry', 15]]"></pie-chart>
+                <pie-chart :data="moddedCount"></pie-chart>
             </div>
         </div>
 
         <div class="split">
             <div>
                 <h3 class="boxed">Servers by Intent</h3>
-                <bar-chart :data="[['X-Small', 55], ['Small', 27], ['Hard', 22], ['Medium', 7]]"></bar-chart>
+                <bar-chart :data="intentCount"></bar-chart>
             </div>
             <div>
                 <h3 class="boxed">Servers by Season</h3>
-                <bar-chart :data="[['X-Small', 55], ['Small', 27], ['Hard', 22], ['Medium', 7]]"></bar-chart>
+                <bar-chart :data="seasonCount"></bar-chart>
             </div>
         </div>
 
@@ -88,22 +91,72 @@ export default {
         transform(obj) {
             let arr = []
             for (var item in obj) {
-                arr.push([item, obj[item]]);
+                arr.push([this.capitalize(item), obj[item]]);
             }
             return arr.sort(function(a, b) {
                 return b[1] - a[1];
             });
+        },
+        capitalize(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        },
+
+        search(input) {
+            if (input.length < 1) { return [] }
+            
+            return this.countries.filter(country => {
+                return country.toLowerCase().startsWith(input.toLowerCase())
+            })
+        },
+
+        submit(input) {
+            input = input.replace(" ", "%20");
+            this.get("/characters/" + input).then(resp => (this.charactersOrigin = this.transform(resp.data)));
         }
     },
 
     data() {
         return {
             characters: [],
+            countries: [],
+            charactersOrigin: [],
+            playerCount: 0,
+            serverCount: 0,
+            playerOrigin: [],
+            serverOrigin: [],
+            intentCount: [],
+            platformCount: [],
+            moddedCount: [],
+            seasonCount: []
         }
     },
 
     mounted() {
+        this.get("/countries").then(resp => (this.countries = resp.data));
         this.get("/characters").then(resp => (this.characters = this.transform(resp.data)));
+        this.get("/attribute/intent").then(resp => (this.intentCount = this.transform(resp.data)));
+        this.get("/attribute/platforms").then(resp => (this.platformCount = this.transform(resp.data)));
+        this.get("/attribute/modded").then(resp => (this.moddedCount = this.transform(resp.data)));
+        this.get("/attribute/season").then(resp => (this.seasonCount = this.transform(resp.data)));
+        this.get("/characters/united%20states").then(resp => (this.charactersOrigin = this.transform(resp.data)));
+        this.get("/count/players").then(resp => (this.playerCount = resp.data));
+        this.get("/count/servers").then(resp => (this.serverCount = resp.data));
+        this.get("/origin/players").then(resp => (this.playerOrigin = this.transform(resp.data)));
+        this.get("/origin/servers").then(resp => (this.serverOrigin = this.transform(resp.data)));
     }
 }
 </script>
+
+<style>
+/* Override library CSS */
+.autocomplete-input {
+    padding: 9px !important;
+    background-image: none;
+    font-size: 10px;
+    text-align: center;
+}
+
+.center {
+    text-align: center;
+}
+</style>

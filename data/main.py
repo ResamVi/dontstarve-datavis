@@ -94,7 +94,7 @@ def main(endpoint, cycle):
             mode=server["mode"],
             season=server["season"],
             intent=server["intent"],
-            mods=server["mods"],
+            mods="vanilla" if server["mods"] else "modded",
             cycle=cycle,
             date=datetime.datetime.now()
         )
@@ -154,8 +154,8 @@ while True:
     time.sleep(60 * 15) # Update every 15 minutes
     # TODO: Clear tables
 
-# TODO: Web-Server: REST API
-
 # TODO: multiple series chart of activity
-# TODO: bar Chart of Steam/TGP and
-# TODO: geo chart of player
+# TODO: Send better HTTP Codes isntead of panic
+# TODO: Allow client to set LIMIT
+# TODO: Collapse some handlers, repeated code...
+# TODO: date of last fetch 

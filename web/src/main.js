@@ -2,6 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Chartkick from 'vue-chartkick'
 import Chart from 'chart.js'
+import Autocomplete from '@trevoreyre/autocomplete-vue'
+import '@trevoreyre/autocomplete-vue/dist/style.css'
 
 import App from './App.vue'
 import Homepage from './pages/Homepage';
@@ -10,6 +12,7 @@ import './global.css';
 
 Vue.use(Chartkick.use(Chart))
 Vue.use(VueRouter)
+Vue.use(Autocomplete)
 
 const router = new VueRouter({
     routes: [

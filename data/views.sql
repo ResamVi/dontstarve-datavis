@@ -36,9 +36,9 @@ ORDER BY COUNT(intent) DESC;
 
 -- Vanilla vs Modded
 CREATE OR REPLACE VIEW count_vanilla AS
-SELECT
-    (SELECT COUNT(*) FROM server WHERE mods) AS modded,
-    (SELECT COUNT(*) FROM server WHERE NOT mods) AS vanilla;
+SELECT mods, COUNT(*)
+FROM server
+GROUP BY mods;
 
 -- Count by season
 CREATE OR REPLACE VIEW count_season AS

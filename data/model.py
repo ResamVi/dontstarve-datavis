@@ -16,7 +16,7 @@ class Server(db.Entity):
     mode            = orm.Optional(str)
     season          = orm.Optional(str)
     intent          = orm.Optional(str)
-    mods            = orm.Optional(bool)
+    mods            = orm.Optional(str)
     cycle           = orm.Required(int)
     date            = orm.Required(datetime.datetime)
     players         = orm.Set("Player")
