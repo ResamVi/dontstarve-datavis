@@ -24,7 +24,8 @@
 html,
 body {
     margin: 0;
-    background: #EADBC4;
+    margin-bottom: 20px;
+    background-color: #EADBC4;
     font-family: 'Oxygen', Helvetica, Arial, sans-serif;
 }
 
@@ -47,3 +48,66 @@ main {
     padding: .2em;
     font-weight: 400;
 }
+
+.split {
+    display: flex;
+}
+
+.split div {
+    flex: 1;
+    text-align: center;
+}
+
+/* TOOLTIP */
+.has-tooltip {
+    position: relative;
+  }
+  .has-tooltip .tooltip {
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transition: visibility 0s ease 0.5s,opacity .3s ease-in;
+    -moz-transition: visibility 0s ease 0.5s,opacity .3s ease-in;
+    -o-transition: visibility 0s ease 0.5s,opacity .3s ease-in;
+    transition: visibility 0s ease 0.5s,opacity .3s ease-in;
+  }
+  .has-tooltip:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Tooltip Body */
+  .tooltip {
+    background-color: #222;
+    bottom: 130%;
+    color: #fff;
+    font-size: 12px;
+    left: 50%;
+    margin-left: -56px;
+    padding: 6px;
+    position: absolute;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: none;
+    width: 200px;
+    z-index: 4;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -o-border-radius: 3px;
+    border-radius: 3px;
+  }
+  
+  /* Tooltip Caret */
+  .tooltip:after {
+    border-top: 5px solid #222;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    bottom: -5px;
+    content: " ";
+    font-size: 0px;
+    left: 50%;
+    line-height: 0%;
+    margin-left: -4px;
+    position: absolute;
+    width: 0px;
+    z-index: 1;
+  }

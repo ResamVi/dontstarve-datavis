@@ -4,11 +4,8 @@
             <img src="../assets/logo-short.png" id="logo-short">
             <div>
                 <p>
-                    Welcome to my DST DataViz - a website recording and evaluating current and past character usage across different regions of players of Don't Starve Together.
-                </p>
-                <p>
-                    This website is dedicated to players who have asked themselves "But who is the most played character now?". Along with answering this question more information
-                    as far as Klei's servers of what is documented and allowed are shown like regional differences.
+                    This website is dedicated to players who have asked themselves "But who is the most played character now?" Along with answering this question more information
+                    (as far as what's documented and allowed) are shown - this covers mostly players, servers and server metadata, regional differences, platforms.
                 </p>
                 <p>
                     This project was created by <a href="https://resamvi.io/">ResamVi</a> and you can find the code <a href="https://github.com/ResamVi">here</a>.
@@ -22,6 +19,24 @@
                     Sincerely, ResamVi
                 </p>
             </div>
+        </div>
+        <h3 class="boxed">Previous discussion on:</h3>
+        <div class="split">
+            <div>
+                <a href="https://www.reddit.com/r/dontstarve/">
+                    <img src="../assets/reddit-logo.png" width="120px"><br/>
+                    Reddit <br/>
+                    /r/dontstarve Thread
+                </a>
+            </div>
+            <div>
+                <a href="https://forums.kleientertainment.com/">
+                    <img src="../assets/klei-logo.png" width="120px"><br/>
+                    Klei Forums<br/>
+                    General Discussion Thread
+                </a>
+            </div>
+            
         </div>
     </main>
 </template>

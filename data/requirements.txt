@@ -1,6 +1,6 @@
 Js2Py==0.70
 pony==0.7.13
+geoip2==4.0.2
 psycopg2==2.8.5
+requests==2.24.0
 python-dotenv==0.14.0
-python-geoip-python3==1.3
-python-geoip-geolite2==2015.303

@@ -4,8 +4,8 @@ import Chartkick from 'vue-chartkick'
 import Chart from 'chart.js'
 
 import App from './App.vue'
-import Homepage from './components/Homepage';
-import About from './components/About';
+import Homepage from './pages/Homepage';
+import About from './pages/About';
 import './global.css';
 
 Vue.use(Chartkick.use(Chart))

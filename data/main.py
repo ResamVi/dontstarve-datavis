@@ -4,12 +4,15 @@ import logging
 import json
 import time
 import os
+import re
+import geoip2.database
 
 from pprint import pprint
 from dotenv import load_dotenv
-from geoip  import geolite2
 from pony   import orm
 from model  import db
+
+import psycopg2
 
 # static variables
 endpoints = [
@@ -20,7 +23,7 @@ endpoints = [
 ]
 
 # Convert platform number to name (see: https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data/?do=findComment&comment=1306033)
-platforms = lambda i : {0: 'None', 1: 'Steam', 2: 'PSN', 4: 'TGP', 8: 'WeGame / QQgame', 10: 'XBLIVE'}.get(i, 'Invalid')
+platforms = lambda i : {1: 'Steam', 4: 'WeGame', 19: 'Console'}.get(i, str(i))
 
 # Logging
 logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
@@ -37,12 +40,31 @@ load_dotenv()
 db.bind(
     provider='postgres',
     user=os.getenv('POSTGRES_USER'),
-    password=os.getenv('POSTGRES_PASS'),
+    password=os.getenv('POSTGRES_PASSWORD'),
     database=os.getenv('POSTGRES_DB'),
     host=os.getenv('HOST')
 )
 
+# Create Tables
 db.generate_mapping(create_tables=True)
+
+# Create Views (we temporarily create a connection to execute raw sql)
+connection = psycopg2.connect(
+    port="5432",
+    user=os.getenv('POSTGRES_USER'),
+    password=os.getenv('POSTGRES_PASSWORD'),
+    database=os.getenv('POSTGRES_DB'),
+    host=os.getenv('HOST'))
+
+cursor = connection.cursor()
+cursor.execute(open("views.sql", "r").read())
+connection.commit()
+
+cursor.close()
+connection.close()
+
+# GeoIP
+reader = geoip2.database.Reader('./GeoLite2-Country.mmdb')
 
 @orm.db_session
 def main(endpoint, cycle):
@@ -51,15 +73,16 @@ def main(endpoint, cycle):
     r = requests.post(endpoint, data=payload)
     servers = r.json()["GET"]
 
-    f = open("output.txt", "a")
-    f.write(json.dumps(r.json(), indent=4, sort_keys=True))
-    f.close()
-
     for server in servers:
 
         # Get origin of server via IP
-        origin = geolite2.lookup(server["__addr"])
-        origin = origin.country if origin is not None else "None"
+        try:
+            origin = reader.country(server["__addr"]).country.name
+        except:
+            origin = "None"
+
+        elapsed = re.search("(\d+)", server["data"])
+        elapsed = elapsed.group() if elapsed is not None else -1
 
         srv = db.Server(
             name=server["name"],
@@ -67,6 +90,7 @@ def main(endpoint, cycle):
             platform=platforms(server["platform"]),
             connected=server["connected"],
             maxconnections=server["maxconnections"],
+            elapsed=elapsed,
             mode=server["mode"],
             season=server["season"],
             intent=server["intent"],
@@ -75,10 +99,6 @@ def main(endpoint, cycle):
             date=datetime.datetime.now()
         )
         logging.info("New Server: '%s'", srv.name)
-        
-        #print("---")
-        #print("BEFORE")
-        #print(server["players"])
 
         # Player list empty
         if server["players"] == "return {  }":
@@ -96,34 +116,46 @@ def main(endpoint, cycle):
             .replace("\n}", "]") \
             .replace('["', '"') \
             .replace('"]=', '":')
-
-        #print("AFTER")
-        #print(players)
-        #print("---")
-        players = json.loads(players)
+        
+        # Some player names give me a headache
+        try:
+            players = json.loads(players)
+        except:
+            continue
         
         for player in players:
             pl = db.Player(
                 cycle=cycle,
                 name=player["name"],
                 character=player["prefab"],
+                origin=srv.origin,
                 server=srv
             )
             logging.info("New Player: '%s'", pl.name)
     
+    # Add activity
+    activ = db.Activity(
+        date=datetime.datetime.now(),
+        countbyorigin=db.select("SELECT * FROM count_player")
+    )
+    logging.info("New Activity created")
+    
 
 cycle = 1
-for endpoint in endpoints:
-    logging.warning("Endpoint: " + endpoint)
-    main(endpoint, cycle)
+while True:
+    for endpoint in endpoints:
+        logging.warning("Endpoint: " + endpoint)
+        logging.warning("Cycle: " + str(cycle))
+        
+        main(endpoint, cycle)
+    
+    logging.warning("Finished Cycle " + str(cycle))
+    cycle += 1
+    time.sleep(60 * 15) # Update every 15 minutes
+    # TODO: Clear tables
 
 # TODO: Web-Server: REST API
-# TODO: Check how many days in
-# TODO: Players inherit server's origin
-# TODO: time_characters: Date<wendy, wigfrid, wilson, ...>
-# TODO: time_origins: Date<China, USA>
 
-# TODO: Chart of previous 24h time_characters
-# TODO: multiple series chart of previous 24h time_origins
+# TODO: multiple series chart of activity
 # TODO: bar Chart of Steam/TGP and
 # TODO: geo chart of player

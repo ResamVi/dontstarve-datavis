@@ -2,23 +2,20 @@ version: '3'
 
 services:
   python:
-    build: .
+    build: data/.
     container_name: "python"
     depends_on:
       - db
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=mydatabase
+    env_file:
+      - .env
   
   db:
     image: "postgres:latest"
     container_name: "db"
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=mydatabase
+    env_file:
+      - .env
     volumes:
-      - ./volume:/var/lib/postgresql/data
+      - ./data/volume:/var/lib/postgresql/data
+      #- ./data/views.sql:/docker-entrypoint-initdb.d/views.sql
     ports:
       - '5432:5432'
