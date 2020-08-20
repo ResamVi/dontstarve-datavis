@@ -155,15 +155,17 @@ cycle = 1
 while True:
     logging.warning("Starting Cycle " + str(cycle))
     for endpoint in endpoints:
-        logging.warning("Endpoint: " + endpoint)
-        
-        getData(endpoint, cycle)
-    
-    logging.warning("Finished Cycle " + str(cycle))
-    cycle += 1
-    time.sleep(5 * 60) # Update every 5 minutes
-    
-    clearTables()
-    createViews()
+        try:
+            logging.warning("Endpoint: " + endpoint)
+            getData(endpoint, cycle)
+        except:
+            pass
+        else:
+            logging.warning("Finished Cycle " + str(cycle))
+            cycle += 1
+            time.sleep(5 * 60) # Update every 5 minutes
+            
+            clearTables()
+            createViews()
 
 # TODO: multiple series chart of activity
