@@ -127,7 +127,7 @@ func main() {
 
 		var rows *sql.Rows
 
-		param := c.DefaultQuery("limit", "4")
+		param := c.DefaultQuery("limit", "20")
 		limit, err := strconv.Atoi(param)
 		if err != nil || limit < 0 {
 			panic("Error while converting " + param + " to number")

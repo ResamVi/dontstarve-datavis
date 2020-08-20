@@ -139,7 +139,7 @@ export default {
         this.get("/attribute/intent?limit=4").then(resp => (this.intentCount = this.transform(resp.data)));
         this.get("/attribute/platforms").then(resp => (this.platformCount = this.transform(resp.data)));
         this.get("/attribute/modded").then(resp => (this.moddedCount = this.transform(resp.data)));
-        this.get("/attribute/season").then(resp => (this.seasonCount = this.transform(resp.data)));
+        this.get("/attribute/season?limit=4").then(resp => (this.seasonCount = this.transform(resp.data)));
         this.get("/characters/united%20states").then(resp => (this.charactersOrigin = this.transform(resp.data)));
         this.get("/count/players").then(resp => (this.playerCount = resp.data));
         this.get("/count/servers").then(resp => (this.serverCount = resp.data));
