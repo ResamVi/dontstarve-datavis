@@ -25,6 +25,12 @@ SELECT platform, COUNT(platform)
 FROM server
 GROUP BY platform
 ORDER BY COUNT(platform) DESC;
+-- Last Update
+CREATE OR REPLACE VIEW last_update AS
+SELECT date 
+FROM server 
+ORDER BY date DESC 
+LIMIT 1;
 
 -- Count by Intent
 CREATE OR REPLACE VIEW count_intent AS

@@ -4,7 +4,7 @@
         <p>
             DST DataViz records and visualizes current player preferences across regions
             on Klei's <a href="https://store.steampowered.com/app/322330/Dont_Starve_Together/">
-            Don't Starve Together</a> game. Data generated 4 minutes ago.
+            Don't Starve Together</a> game. Data generated {{ Math.round(lastupdate) }} minutes ago.
         </p>
         
         <div class="split">
@@ -127,14 +127,16 @@ export default {
             intentCount: [],
             platformCount: [],
             moddedCount: [],
-            seasonCount: []
+            seasonCount: [],
+            lastupdate: 0
         }
     },
 
     mounted() {
+        this.get("/lastupdate").then(resp => (this.lastupdate = resp.data));
         this.get("/countries").then(resp => (this.countries = resp.data));
         this.get("/characters").then(resp => (this.characters = this.transform(resp.data)));
-        this.get("/attribute/intent").then(resp => (this.intentCount = this.transform(resp.data)));
+        this.get("/attribute/intent?limit=4").then(resp => (this.intentCount = this.transform(resp.data)));
         this.get("/attribute/platforms").then(resp => (this.platformCount = this.transform(resp.data)));
         this.get("/attribute/modded").then(resp => (this.moddedCount = this.transform(resp.data)));
         this.get("/attribute/season").then(resp => (this.seasonCount = this.transform(resp.data)));

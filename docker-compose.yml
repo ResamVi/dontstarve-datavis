@@ -1,6 +1,14 @@
 version: '3'
 
 services:
+  go:
+    build: "api/."
+    container_name: "go"
+    env_file:
+      - .env
+    ports:
+      - '3000:3000'
+
   python:
     build: data/.
     container_name: "python"
@@ -16,6 +24,5 @@ services:
       - .env
     volumes:
       - ./data/volume:/var/lib/postgresql/data
-      #- ./data/views.sql:/docker-entrypoint-initdb.d/views.sql
     ports:
       - '5432:5432'

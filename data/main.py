@@ -1,3 +1,5 @@
+import geoip2.database
+import psycopg2
 import datetime
 import requests
 import logging
@@ -5,14 +7,12 @@ import json
 import time
 import os
 import re
-import geoip2.database
 
 from pprint import pprint
 from dotenv import load_dotenv
 from pony   import orm
 from model  import db
 
-import psycopg2
 
 # static variables
 endpoints = [
@@ -25,53 +25,15 @@ endpoints = [
 # Convert platform number to name (see: https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data/?do=findComment&comment=1306033)
 platforms = lambda i : {1: 'Steam', 4: 'WeGame', 19: 'Console'}.get(i, str(i))
 
-# Logging
-logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
-logging.getLogger().setLevel(logging.INFO)
-
-# lazy solution to waiting on db docker container to finish loading
-#logging.warning("Waiting ten seconds before starting") 
-#time.sleep(10)
-
-# Load .env file
-load_dotenv()
-
-# Database init
-db.bind(
-    provider='postgres',
-    user=os.getenv('POSTGRES_USER'),
-    password=os.getenv('POSTGRES_PASSWORD'),
-    database=os.getenv('POSTGRES_DB'),
-    host=os.getenv('HOST')
-)
-
-# Create Tables
-db.generate_mapping(create_tables=True)
-
-# Create Views (we temporarily create a connection to execute raw sql)
-connection = psycopg2.connect(
-    port="5432",
-    user=os.getenv('POSTGRES_USER'),
-    password=os.getenv('POSTGRES_PASSWORD'),
-    database=os.getenv('POSTGRES_DB'),
-    host=os.getenv('HOST'))
-
-cursor = connection.cursor()
-cursor.execute(open("views.sql", "r").read())
-connection.commit()
-
-cursor.close()
-connection.close()
-
-# GeoIP
-reader = geoip2.database.Reader('./GeoLite2-Country.mmdb')
-
 @orm.db_session
-def main(endpoint, cycle):
+def getData(endpoint, cycle):
 
-    payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
-    r = requests.post(endpoint, data=payload)
-    servers = r.json()["GET"]
+    try:
+        payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
+        r = requests.post(endpoint, data=payload)
+        servers = r.json()["GET"]
+    except:
+        return
 
     for server in servers:
 
@@ -139,23 +101,65 @@ def main(endpoint, cycle):
         countbyorigin=db.select("SELECT * FROM count_player")
     )
     logging.info("New Activity created")
-    
+
+# Create Views (we temporarily create a connection to execute raw sql)
+def createViews():
+    connection = psycopg2.connect(
+        port="5432",
+        user=os.getenv('POSTGRES_USER'),
+        password=os.getenv('POSTGRES_PASSWORD'),
+        database=os.getenv('POSTGRES_DB'),
+        host=os.getenv('DB_HOST')
+    )
+
+    cursor = connection.cursor()
+    cursor.execute(open("views.sql", "r").read())
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def clearTables():
+    db.drop_all_tables(with_all_data=True)
+    db.create_tables()
+
+# -----
+# Logging
+logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
+logging.getLogger().setLevel(logging.WARNING)
+
+# Load .env file
+load_dotenv()
+
+# Database init
+db.bind(
+    provider='postgres',
+    user=os.getenv('POSTGRES_USER'),
+    password=os.getenv('POSTGRES_PASSWORD'),
+    database=os.getenv('POSTGRES_DB'),
+    host=os.getenv('DB_HOST')
+)
+
+# Create Tables and Views
+db.generate_mapping(create_tables=True)
+createViews()
+
+# GeoIP
+reader = geoip2.database.Reader('./GeoLite2-Country.mmdb')
 
 cycle = 1
 while True:
+    logging.warning("Starting Cycle " + str(cycle))
     for endpoint in endpoints:
         logging.warning("Endpoint: " + endpoint)
-        logging.warning("Cycle: " + str(cycle))
         
-        main(endpoint, cycle)
+        getData(endpoint, cycle)
     
     logging.warning("Finished Cycle " + str(cycle))
     cycle += 1
-    time.sleep(60 * 15) # Update every 15 minutes
-    # TODO: Clear tables
+    time.sleep(5 * 60) # Update every 5 minutes
+    
+    clearTables()
+    createViews()
 
 # TODO: multiple series chart of activity
-# TODO: Send better HTTP Codes isntead of panic
-# TODO: Allow client to set LIMIT
-# TODO: Collapse some handlers, repeated code...
-# TODO: date of last fetch 

@@ -3,19 +3,23 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 )
 
 var (
-	host     = "localhost" //os.Getenv("HOST")
+	host     = os.Getenv("DB_HOST")
 	port     = 5432
-	user     = "root"       //os.Getenv("POSTGRES_USER")
-	password = "password"   //os.Getenv("POSTGRES_PASSWORD")
-	dbname   = "mydatabase" //os.Getenv("POSTGRES_DB")
+	user     = os.Getenv("POSTGRES_USER")
+	password = os.Getenv("POSTGRES_PASSWORD")
+	dbname   = os.Getenv("POSTGRES_DB")
 )
 
 func main() {
@@ -32,13 +36,30 @@ func main() {
 	router := gin.Default()
 	router.Use(cors.Default())
 
+	router.GET("/lastupdate", func(c *gin.Context) {
+
+		row := db.QueryRow("SELECT date FROM last_update")
+		var lastUpdate mysql.NullTime
+		err := row.Scan(&lastUpdate)
+		handleError(err)
+
+		diff := time.Now().Sub(lastUpdate.Time)
+		c.JSON(200, diff.Minutes())
+	})
+
 	router.GET("/attribute/:attr", func(c *gin.Context) {
 
 		var rows *sql.Rows
 
+		param := c.DefaultQuery("limit", "4")
+		limit, err := strconv.Atoi(param)
+		if err != nil || limit < 0 {
+			panic("Error while converting " + param + " to number")
+		}
+
 		switch c.Param("attr") {
 		case "intent":
-			rows, err = db.Query("SELECT * FROM count_intent LIMIT 4")
+			rows, err = db.Query("SELECT * FROM count_intent LIMIT $1", limit)
 		case "platforms":
 			rows, err = db.Query("SELECT * FROM count_platform")
 		case "modded":
@@ -106,11 +127,17 @@ func main() {
 
 		var rows *sql.Rows
 
+		param := c.DefaultQuery("limit", "4")
+		limit, err := strconv.Atoi(param)
+		if err != nil || limit < 0 {
+			panic("Error while converting " + param + " to number")
+		}
+
 		switch c.Param("type") {
 		case "players":
-			rows, err = db.Query("SELECT * FROM count_player LIMIT 20")
+			rows, err = db.Query("SELECT * FROM count_player LIMIT $1", limit)
 		case "servers":
-			rows, err = db.Query("SELECT * FROM count_server LIMIT 20")
+			rows, err = db.Query("SELECT * FROM count_server LIMIT $1", limit)
 		default:
 			panic("Wrong type")
 		}
@@ -132,8 +159,14 @@ func main() {
 	})
 
 	router.GET("/characters/:origin", func(c *gin.Context) {
-		// TODO: Sanitize
-		rows, err := db.Query("SELECT character, count FROM count_character_by_origin WHERE origin = $1 LIMIT 20", strings.Title(c.Param("origin")))
+
+		param := c.DefaultQuery("limit", "20")
+		limit, err := strconv.Atoi(param)
+		if err != nil || limit < 0 {
+			panic("Error while converting " + param + " to number")
+		}
+
+		rows, err := db.Query("SELECT character, count FROM count_character_by_origin WHERE origin = $1 LIMIT $2", strings.Title(c.Param("origin")), limit)
 		handleError(err)
 
 		characters := make(map[string]int)
@@ -144,18 +177,7 @@ func main() {
 			err = rows.Scan(&characterName, &count)
 			handleError(err)
 
-			switch characterName {
-			case "":
-				characterName = "pending"
-			case "wathgrithr":
-				characterName = "wigfrid"
-			case "waxwell":
-				characterName = "maxwell"
-			case "monkey_king":
-				characterName = "wilbur"
-			}
-
-			characters[characterName] = count
+			characters[rename(characterName)] = count
 		}
 
 		c.JSON(200, characters)
@@ -163,7 +185,13 @@ func main() {
 
 	router.GET("/characters", func(c *gin.Context) {
 
-		rows, err := db.Query("SELECT * FROM count_character ORDER BY count DESC LIMIT 19")
+		param := c.DefaultQuery("limit", "19")
+		limit, err := strconv.Atoi(param)
+		if err != nil || limit < 0 {
+			panic("Error while converting " + param + " to number")
+		}
+
+		rows, err := db.Query("SELECT * FROM count_character ORDER BY count DESC LIMIT $1", limit)
 		handleError(err)
 
 		characters := make(map[string]int)
@@ -174,23 +202,27 @@ func main() {
 			err = rows.Scan(&characterName, &count)
 			handleError(err)
 
-			switch characterName {
-			case "":
-				characterName = "pending"
-			case "wathgrithr":
-				characterName = "wigfrid"
-			case "waxwell":
-				characterName = "maxwell"
-			case "monkey_king":
-				characterName = "wilbur"
-			}
-
-			characters[characterName] = count
+			characters[rename(characterName)] = count
 		}
 
 		c.JSON(200, characters)
 	})
 	router.Run(":3000")
+}
+
+func rename(name string) string {
+	switch name {
+	case "":
+		return "pending"
+	case "wathgrithr":
+		return "wigfrid"
+	case "waxwell":
+		return "maxwell"
+	case "monkey_king":
+		return "wilbur"
+	default:
+		return name
+	}
 }
 
 func handleError(err error) {
