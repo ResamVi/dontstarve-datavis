@@ -8,6 +8,9 @@ services:
       - .env
     ports:
       - '3000:3000'
+    volumes:
+      - ./api/fullchain.pem:/app/fullchain.pem
+      - ./api/privkey.pem:/app/privkey.pem
 
   python:
     build: data/.
