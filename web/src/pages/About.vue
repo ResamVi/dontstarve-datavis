@@ -20,7 +20,7 @@
                 </p>
             </div>
         </div>
-        <h3 class="boxed">Previous discussion on:</h3>
+        <!--<h3 class="boxed">Previous discussion on:</h3>
         <div class="split">
             <div>
                 <a href="https://www.reddit.com/r/dontstarve/">
@@ -37,7 +37,7 @@
                 </a>
             </div>
             
-        </div>
+        </div>-->
     </main>
 </template>
 
