@@ -86,7 +86,7 @@ export default {
     methods: {
         get(endpoint) {
             return axios
-                .get("http://localhost:3000" + endpoint);
+                .get("https://dst.resamvi.io:3000" + endpoint);
         },
         transform(obj) {
             let arr = []
