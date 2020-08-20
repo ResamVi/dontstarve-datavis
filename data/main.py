@@ -163,9 +163,9 @@ while True:
         else:
             logging.warning("Finished Cycle " + str(cycle))
             cycle += 1
-            time.sleep(5 * 60) # Update every 5 minutes
-            
-            clearTables()
-            createViews()
+    time.sleep(5 * 60) # Update every 5 minutes
+    
+    clearTables()
+    createViews()
 
 # TODO: multiple series chart of activity
