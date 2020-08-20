@@ -131,6 +131,10 @@ logging.getLogger().setLevel(logging.WARNING)
 # Load .env file
 load_dotenv()
 
+# Silly hack to wait for docker container to initialize
+logging.warning("Waiting 10s")
+time.sleep(5)
+
 # Database init
 db.bind(
     provider='postgres',

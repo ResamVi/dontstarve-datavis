@@ -207,7 +207,8 @@ func main() {
 
 		c.JSON(200, characters)
 	})
-	router.Run(":3000")
+
+	router.RunTLS(":3000", "fullchain.pem", "privkey.pem")
 }
 
 func rename(name string) string {
