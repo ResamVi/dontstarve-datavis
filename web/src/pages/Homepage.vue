@@ -45,7 +45,7 @@
         <bar-chart :data="playerOrigin"></bar-chart>
 
         <h3 class="boxed">Map of Players by Country</h3>
-        <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="playerOrigin"></geo-chart>
+        <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="allPlayerOrigin"></geo-chart>
 
         <h3 class="boxed">Character Choice by Region</h3>
         <div class="center">
@@ -128,6 +128,7 @@ export default {
             platformCount: [],
             moddedCount: [],
             seasonCount: [],
+            allPlayerOrigin: [],
             lastupdate: 0
         }
     },
@@ -144,7 +145,9 @@ export default {
         this.get("/count/players").then(resp => (this.playerCount = resp.data));
         this.get("/count/servers").then(resp => (this.serverCount = resp.data));
         this.get("/origin/players").then(resp => (this.playerOrigin = this.transform(resp.data)));
+        this.get("/origin/players?limit=200").then(resp => (this.allPlayerOrigin = this.transform(resp.data)));
         this.get("/origin/servers").then(resp => (this.serverOrigin = this.transform(resp.data)));
+        
     }
 }
 </script>
