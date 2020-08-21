@@ -20,24 +20,24 @@
                 </p>
             </div>
         </div>
-        <!--<h3 class="boxed">Previous discussion on:</h3>
+        <h3 class="boxed">Previous discussion on:</h3>
         <div class="split">
             <div>
-                <a href="https://www.reddit.com/r/dontstarve/">
+                <a href="https://www.reddit.com/r/dontstarve/comments/idxxel/infographic_on_the_most_used_character_in_total/">
                     <img src="../assets/reddit-logo.png" width="120px"><br/>
                     Reddit <br/>
                     /r/dontstarve Thread
                 </a>
             </div>
             <div>
-                <a href="https://forums.kleientertainment.com/">
+                <a href="https://forums.kleientertainment.com/forums/topic/121116-most-used-character-in-total-by-region-and-more-infographic/">
                     <img src="../assets/klei-logo.png" width="120px"><br/>
                     Klei Forums<br/>
                     General Discussion Thread
                 </a>
             </div>
             
-        </div>-->
+        </div>
     </main>
 </template>
 
