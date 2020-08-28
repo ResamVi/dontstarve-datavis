@@ -28,27 +28,26 @@ platforms = lambda i : {1: 'Steam', 4: 'WeGame', 19: 'Console'}.get(i, str(i))
 @orm.db_session
 def getData(endpoint, cycle):
 
-    try:
-        payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
-        r = requests.post(endpoint, data=payload)
-        servers = r.json()["GET"]
-    except:
-        return
+    payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
+    r = requests.post(endpoint, data=payload)
+    servers = r.json()["GET"]
 
     for server in servers:
-
         # Get origin of server via IP
-        try:
-            origin = reader.country(server["__addr"]).country.name
-        except:
-            origin = "None"
+        geoip       = reader.country(server["__addr"])
+        country     = geoip.country.name
+        continent   = geoip.continent.names['en']
+        iso         = geoip.country.iso_code
+        
 
         elapsed = re.search("(\d+)", server["data"])
         elapsed = elapsed.group() if elapsed is not None else -1
 
         srv = db.Server(
             name=server["name"],
-            origin=origin,
+            country=country,
+            iso=iso,
+            continent=continent,
             platform=platforms(server["platform"]),
             connected=server["connected"],
             maxconnections=server["maxconnections"],
@@ -90,7 +89,9 @@ def getData(endpoint, cycle):
                 cycle=cycle,
                 name=player["name"],
                 character=player["prefab"],
-                origin=srv.origin,
+                country=srv.country,
+                iso=srv.iso,
+                continent = srv.continent,
                 server=srv
             )
             logging.info("New Player: '%s'", pl.name)
@@ -106,10 +107,14 @@ def getData(endpoint, cycle):
 def createViews():
     connection = psycopg2.connect(
         port="5432",
-        user=os.getenv('POSTGRES_USER'),
-        password=os.getenv('POSTGRES_PASSWORD'),
-        database=os.getenv('POSTGRES_DB'),
-        host=os.getenv('DB_HOST')
+        #user=os.getenv('POSTGRES_USER'),
+        user='root',
+        #password=os.getenv('POSTGRES_PASSWORD'),
+        password='password',
+        #database=os.getenv('POSTGRES_DB'),
+        database='mydatabase',
+        #host=os.getenv('DB_HOST')
+        host='localhost'
     )
 
     cursor = connection.cursor()
@@ -126,22 +131,26 @@ def clearTables():
 # -----
 # Logging
 logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
-logging.getLogger().setLevel(logging.WARNING)
+logging.getLogger().setLevel(logging.INFO)
 
 # Load .env file
 load_dotenv()
 
 # Silly hack to wait for docker container to initialize
-logging.warning("Waiting 10s")
-time.sleep(5)
+logging.warning("Waiting 5s")
+# time.sleep(5)
 
 # Database init
 db.bind(
     provider='postgres',
-    user=os.getenv('POSTGRES_USER'),
-    password=os.getenv('POSTGRES_PASSWORD'),
-    database=os.getenv('POSTGRES_DB'),
-    host=os.getenv('DB_HOST')
+    user='root',
+    #user=os.getenv('POSTGRES_USER'),
+    password='password',
+    #password=os.getenv('POSTGRES_PASSWORD'),
+    database='mydatabase',
+    #database=os.getenv('POSTGRES_DB'),
+    host='localhost'
+    #host=os.getenv('DB_HOST')
 )
 
 # Create Tables and Views
@@ -158,11 +167,10 @@ while True:
         try:
             logging.warning("Endpoint: " + endpoint)
             getData(endpoint, cycle)
-        except:
-            pass
-        else:
-            logging.warning("Finished Cycle " + str(cycle))
-            cycle += 1
+        except Exception as e:
+            print(e)
+    logging.warning("Finished Cycle " + str(cycle))
+    cycle += 1
     time.sleep(5 * 60) # Update every 5 minutes
     
     clearTables()

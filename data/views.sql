@@ -4,20 +4,19 @@ SELECT
     (SELECT COUNT(*) FROM server) AS server_count, 
     (SELECT COUNT(*) FROM player) AS player_count;
 
--- Count by Server Origin
+-- Count by Server Country
 CREATE OR REPLACE VIEW count_server AS
-SELECT origin, COUNT(origin)
+SELECT country, COUNT(country)
 FROM server 
-GROUP BY origin 
-ORDER BY COUNT(origin) DESC;
+GROUP BY country 
+ORDER BY COUNT(country) DESC;
 
--- Count by Player Origin
+-- Count by Player country
 CREATE OR REPLACE VIEW count_player AS
-SELECT origin, COUNT(origin)
+SELECT country, COUNT(country)
 FROM player 
-GROUP BY origin 
-ORDER BY COUNT(origin) DESC;
-
+GROUP BY country 
+ORDER BY COUNT(country) DESC;
 
 -- Count by Platform
 CREATE OR REPLACE VIEW count_platform AS
@@ -25,6 +24,7 @@ SELECT platform, COUNT(platform)
 FROM server
 GROUP BY platform
 ORDER BY COUNT(platform) DESC;
+
 -- Last Update
 CREATE OR REPLACE VIEW last_update AS
 SELECT date 
@@ -61,16 +61,16 @@ FROM player
 GROUP BY character
 ORDER BY COUNT(character) DESC;
 
--- Count pairs of (Character, Origin) 
-CREATE OR REPLACE VIEW count_character_by_origin AS
-SELECT character, origin, COUNT(character)
+-- Count pairs of (Character, Country) 
+CREATE OR REPLACE VIEW count_character_by_country AS
+SELECT character, country, iso, COUNT(character)
 FROM player
-GROUP BY character, origin
+GROUP BY character, country, iso
 ORDER BY COUNT(character) DESC;
 
--- Calculate % of character usage per origin
-CREATE OR REPLACE VIEW percentage_character_by_origin AS
-SELECT character, c.origin, ROUND((c.count/p.count::DECIMAL)*100, 2) AS percent
-FROM count_character_by_origin c
+-- Calculate % of character usage per country
+CREATE OR REPLACE VIEW percentage_character_by_country AS
+SELECT character, c.country, c.iso, ROUND((c.count/p.count::DECIMAL)*100, 2) AS percent, c.count AS char_count, p.count AS total_count
+FROM count_character_by_country c
 INNER JOIN count_player p
-ON c.origin = p.origin;
+ON c.country = p.country;
