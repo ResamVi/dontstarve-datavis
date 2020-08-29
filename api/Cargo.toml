@@ -1,0 +1,17 @@
+[package]
+name = "dontstarve-dataviz-api"
+description = "Serve collected Don't Starve Together metrics via a REST API"
+version = "0.1.0"
+authors = ["Julien Midedji <Julien.Midedji@student.kit.edu>"]
+edition = "2018"
+
+[dependencies]
+rocket = "0.4.5"
+chrono = "0.4.15"
+rocket_cors = "0.5.1"
+postgres = { version = "0.15.0", features = ["with-chrono"] } # Need to import (an old version of) postgres to get chrono for timestamp parsing
+
+[dependencies.rocket_contrib]
+version = "0.4.5"
+default-features = false
+features = ["json", "postgres_pool"]

@@ -3,5 +3,6 @@ debug.log
 .vscode
 __pycache__
 web/node_modules
+api/target/
 node_modules
 .env
