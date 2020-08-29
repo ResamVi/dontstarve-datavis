@@ -1,3 +1,5 @@
+import os
+import psycopg2
 import datetime
 import logging
 
@@ -38,3 +40,24 @@ class Activity(db.Entity): # Rename Snapshot
     id              = orm.PrimaryKey(int, auto=True)
     date            = orm.Required(datetime.datetime)
     countbyorigin   = orm.Required(orm.Json) # {China: 2991, USA: 320, Russia: 245, ...}
+
+# Create Views (we temporarily create a connection to execute raw sql)
+def createViews():
+    connection = psycopg2.connect(
+        port="5432",
+        user=os.getenv('POSTGRES_USER'),
+        password=os.getenv('POSTGRES_PASSWORD'),
+        database=os.getenv('POSTGRES_DB'),
+        host=os.getenv('DB_HOST')
+    )
+
+    cursor = connection.cursor()
+    cursor.execute(open("views.sql", "r").read())
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def clearTables():
+    db.drop_all_tables(with_all_data=True)
+    db.create_tables()
