@@ -1,2 +1,15 @@
 [global.databases]
 db = { url = "postgres://root:password@localhost:5432/mydatabase" }
+
+[development]
+address = "localhost"
+log = "normal"
+
+[staging]
+address = "0.0.0.0"
+log = "normal"
+
+[production]
+address = "0.0.0.0"
+log = "normal"
+tls = { certs = "fullchain.pem", key = "privkey.pem" }

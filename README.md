@@ -18,4 +18,6 @@ POSTGRES_USER=<select postgres username>
 POSTGRES_PASSWORD=<select postgress password>
 POSTGRES_DB=<select database name>
 DB_HOST=<"db" if running with docker-compose else most likely "localhost">
+ROCKET_ENV=<"dev" or "prod">
+ROCKET_DATABASES={ db = { url = "postgres://<postgres_user>:<postgress_password>@db:5432/<postgres_db>" } }
 ```

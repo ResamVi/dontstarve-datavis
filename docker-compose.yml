@@ -1,16 +1,16 @@
 version: '3'
 
 services:
-  go:
+  rust:
     build: "api/."
-    container_name: "go"
+    container_name: "rust"
     env_file:
       - .env
     ports:
-      - '3000:3000'
-    volumes:
-      - ./api/fullchain.pem:/app/fullchain.pem
-      - ./api/privkey.pem:/app/privkey.pem
+      - '8000:8000'
+    #volumes:
+      #- ./api/fullchain.pem:/app/fullchain.pem
+      #- ./api/privkey.pem:/app/privkey.pem
 
   python:
     build: data/.
@@ -25,7 +25,7 @@ services:
     container_name: "db"
     env_file:
       - .env
-    volumes:
-      - ./data/volume:/var/lib/postgresql/data
+    # volumes:
+      # - ./data/volume:/var/lib/postgresql/data
     ports:
       - '5432:5432'

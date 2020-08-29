@@ -256,6 +256,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "datavizapi"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "postgres",
+ "rocket",
+ "rocket_contrib",
+ "rocket_cors",
+]
+
+[[package]]
 name = "devise"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -303,17 +314,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
 dependencies = [
  "generic-array 0.12.3",
-]
-
-[[package]]
-name = "dontstarve-dataviz-api"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "postgres",
- "rocket",
- "rocket_contrib",
- "rocket_cors",
 ]
 
 [[package]]
