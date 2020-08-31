@@ -71,7 +71,7 @@
             <FlagRow character="Wickerbottom"   :data=wickerbottom />
             <FlagRow character="Woodie"         :data=woodie />
             <FlagRow character="Wes"            :data=wes />
-            <FlagRow character="Maxwell"        :data=maxwell />
+            <FlagRow character="Waxwell"        :data=waxwell />
             <FlagRow character="Wigfrid"        :data=wigfrid />
             <FlagRow character="Webber"         :data=webber />
             <FlagRow character="Warly"          :data=warly />
@@ -173,7 +173,7 @@ export default {
             wickerbottom: [],
             woodie: [],
             wes: [],
-            maxwell: [],
+            waxwell: [],
             wigfrid: [],
             webber: [],
             warly: [],
@@ -210,7 +210,7 @@ export default {
         this.get("/characters/percentage/wickerbottom") .then(resp => (this.wickerbottom = resp.data));
         this.get("/characters/percentage/woodie")       .then(resp => (this.woodie = resp.data));
         this.get("/characters/percentage/wes")          .then(resp => (this.wes = resp.data));
-        this.get("/characters/percentage/waxwell")      .then(resp => (this.maxwell = resp.data));
+        this.get("/characters/percentage/waxwell")      .then(resp => (this.waxwell = resp.data));
         this.get("/characters/percentage/wathgrithr")   .then(resp => (this.wigfrid = resp.data));
         this.get("/characters/percentage/webber")       .then(resp => (this.webber = resp.data));
         this.get("/characters/percentage/warly")        .then(resp => (this.warly = resp.data));
