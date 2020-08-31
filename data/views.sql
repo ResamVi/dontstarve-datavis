@@ -68,9 +68,9 @@ FROM player
 GROUP BY character, country, iso
 ORDER BY COUNT(character) DESC;
 
--- Calculate % of character usage per country
+-- Calculate % of character usage per country (need to cast to float because numeric type in rust not supported (fuck sake man...))
 CREATE OR REPLACE VIEW percentage_character_by_country AS
-SELECT character, c.country, c.iso, ROUND((c.count/p.count::DECIMAL)*100, 2) AS percent, c.count AS char_count, p.count AS total_count
+SELECT character, c.country, c.iso, ROUND((c.count/p.count::DECIMAL)*100, 2)::float AS percent, c.count AS char_count, p.count AS total_count
 FROM count_character_by_country c
 INNER JOIN count_player p
 ON c.country = p.country;

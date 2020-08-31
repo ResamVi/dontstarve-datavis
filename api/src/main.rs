@@ -15,6 +15,10 @@ struct Db(postgres::Connection);
 
 type Item = (String, i64); // e.g. ["Wigfrid", 15] or ["Russia", 1243]
 
+type IsoItem = (String, String, f64); // e.g. ["Greece", "GR", 42.5], ["Poland", "PL", 25.5]
+
+type Percentage = (String, f64); // e.g. ["Greece", 42.5], ["Poland", 25.5]
+
 // -- Handlers --
 
 #[get("/characters?<modded>")]
@@ -23,7 +27,7 @@ fn characters(conn: Db, modded: bool) -> Json<Vec<Item>> {
     let query_string = if modded {
         "SELECT character, count \
         FROM count_character \
-        LIMIT 20"
+        LIMIT 30"
     } else {
         "SELECT character, count \
         FROM count_character \
@@ -47,7 +51,7 @@ fn characters_by_country(conn: Db, country: String) -> Json<Vec<Item>> {
         FROM count_character_by_country \
         WHERE country = $1 \
         AND character \
-        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly');";
+        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly');";    
 
     let mut characters: Vec<Item> = vec![];
     for row in &conn.0.query(query_string, &[&title_case(&country)]).unwrap() {
@@ -55,6 +59,41 @@ fn characters_by_country(conn: Db, country: String) -> Json<Vec<Item>> {
     }
 
     Json(characters)
+}
+
+#[get("/characters/percentage/<character>")]
+fn country_percentage_by_character(conn:Db, character: String) -> Json<Vec<IsoItem>> {
+    let query_string = "
+        SELECT character, country, iso, percent \
+        FROM percentage_character_by_country \
+        WHERE character = $1 \
+        AND total_count > 30 \
+        ORDER BY percent DESC \
+        LIMIT 5;";
+
+    let mut countries: Vec<IsoItem> = vec![];
+    for row in &conn.0.query(query_string, &[&character]).unwrap() {        
+        countries.push((row.get(1), row.get(2), row.get(3)));
+    }
+
+    Json(countries)
+}
+
+#[get("/characters/country/<country>")]
+fn country_percentage_by_country(conn:Db, country: String) -> Json<Vec<Percentage>> {
+    let query_string = "
+        SELECT character, percent \
+        FROM percentage_character_by_country \
+        WHERE country = $1 \
+        AND character \
+        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly');";
+
+        let mut countries: Vec<Percentage> = vec![];
+        for row in &conn.0.query(query_string, &[&title_case(&country)]).unwrap() {
+            countries.push((rename_char(row.get(0)), row.get(1)));
+        }
+
+        Json(countries)
 }
 
 #[get("/meta/age")]
@@ -121,7 +160,7 @@ fn main() {
     let cors = rocket_cors::CorsOptions::default().to_cors().unwrap();
 
     rocket::ignite()
-        .mount("/", routes![characters, characters_by_country, age, countries, count, volume])
+        .mount("/", routes![country_percentage_by_character, country_percentage_by_country, characters_by_country, characters, countries, volume, count, age])
         .attach(Db::fairing())
         .attach(cors)
         .launch();

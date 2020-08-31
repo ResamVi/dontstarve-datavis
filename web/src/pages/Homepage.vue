@@ -4,7 +4,7 @@
         <p>
             DST DataViz records and visualizes current player preferences across regions
             on Klei's <a href="https://store.steampowered.com/app/322330/Dont_Starve_Together/">
-            Don't Starve Together</a> game. Data generated {{ Math.round(lastupdate) }} minutes ago.
+            Don't Starve Together</a> game. Data generated {{ Math.round(age) }} minutes ago.
         </p>
         
         <div class="split">
@@ -27,10 +27,14 @@
                 </span>
             </a>
         </h3>
+        <span style="float:right;">
+            <input type="checkbox" v-model="includeModdedChars" @click="toggleModdedChar">
+            <label for="modded-chars">Include Modded Characters</label>
+        </span>
         <bar-chart :data="characters"></bar-chart>
 
         <h3 class="boxed">Amount of Servers by Country</h3>
-        <bar-chart :data="serverOrigin"></bar-chart>
+        <bar-chart :data="serverCountry"></bar-chart>
 
         <h3 class="boxed">
             Amount of Players by Country
@@ -42,17 +46,41 @@
                 </span>
             </a>
         </h3>
-        <bar-chart :data="playerOrigin"></bar-chart>
+        <bar-chart :data="playerCountry"></bar-chart>
 
         <h3 class="boxed">Map of Players by Country</h3>
-        <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="allPlayerOrigin"></geo-chart>
+        <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="allPlayerCountry"></geo-chart>
 
         <h3 class="boxed">Character Choice by Region</h3>
         <div class="center">
-            <autocomplete id="inputfield" :search="search" placeholder="United States" @submit="submit"></autocomplete>
+            <autocomplete id="inputfield" :search="search" placeholder="Enter Country here" @submit="submit"></autocomplete>
         </div>
+        <span style="float:right;">
+            <input type="checkbox" v-model="asPercentage" @click="toggleAsPercentage">
+            <label for="modded-chars">As percentage</label>
+        </span>
+        <bar-chart :data="charactersCountry"></bar-chart>
 
-        <bar-chart :data="charactersOrigin"></bar-chart>
+        <h3 class="boxed">Highest Character Preferences by Country</h3>
+        <div class="c">
+            <FlagRow character="Wilson"         :data=wilson />
+            <FlagRow character="Willow"         :data=willow />
+            <FlagRow character="Wolfgang"       :data=wolfgang />
+            <FlagRow character="Wendy"          :data=wendy />
+            <FlagRow character="WX-78"          :data=wx />
+            <FlagRow character="Wickerbottom"   :data=wickerbottom />
+            <FlagRow character="Woodie"         :data=woodie />
+            <FlagRow character="Wes"            :data=wes />
+            <FlagRow character="Maxwell"        :data=maxwell />
+            <FlagRow character="Wigfrid"        :data=wigfrid />
+            <FlagRow character="Webber"         :data=webber />
+            <FlagRow character="Warly"          :data=warly />
+            <FlagRow character="Wormwood"       :data=wormwood />
+            <FlagRow character="Winona"         :data=winona />
+            <FlagRow character="Wortox"         :data=wortox />
+            <FlagRow character="Wurt"           :data=wurt />
+            <FlagRow character="Walter"         :data=walter />
+        </div>
 
         <div class="split">
             <div>
@@ -81,26 +109,18 @@
 
 <script>
 import axios from 'axios';
+import FlagRow from './FlagRow.vue';
 
 export default {
+    components: {
+        FlagRow
+    },
     methods: {
         get(endpoint) {
             return axios
-                .get("https://dst.resamvi.io:3000" + endpoint);
+                .get("https://dst.resamvi.io:8000" + endpoint);
+                //.get("http://localhost:8000" + endpoint);
         },
-        transform(obj) {
-            let arr = []
-            for (var item in obj) {
-                arr.push([this.capitalize(item), obj[item]]);
-            }
-            return arr.sort(function(a, b) {
-                return b[1] - a[1];
-            });
-        },
-        capitalize(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        },
-
         search(input) {
             if (input.length < 1) { return [] }
             
@@ -110,44 +130,95 @@ export default {
         },
 
         submit(input) {
-            input = input.replace(" ", "%20");
-            this.get("/characters/" + input).then(resp => (this.charactersOrigin = this.transform(resp.data)));
+            this.countryInput = input.replace(" ", "%20");
+            let url = this.asPercentage ? "/characters/" : "/characters/country/";
+            this.get(url + this.countryInput).then(resp => (this.charactersCountry = resp.data));
+        },
+
+        toggleModdedChar() {
+            this.get("/characters?modded=" + !this.includeModdedChars).then(resp => (this.characters = resp.data));
+        },
+
+        toggleAsPercentage() {
+            let url = this.asPercentage ? "/characters/" : "/characters/country/";
+            this.get(url + this.countryInput).then(resp => (this.charactersCountry = resp.data));
         }
     },
 
     data() {
         return {
-            characters: [],
-            countries: [],
-            charactersOrigin: [],
+            age: 0,
+            countryInput: "germany",
             playerCount: 0,
             serverCount: 0,
-            playerOrigin: [],
-            serverOrigin: [],
+            characters: [],
+            countries: [],
+            charactersCountry: [],
+            playerCountry: [],
+            serverCountry: [],
             intentCount: [],
             platformCount: [],
             moddedCount: [],
             seasonCount: [],
-            allPlayerOrigin: [],
-            lastupdate: 0
+            allPlayerCountry: [],
+            
+            includeModdedChars: false,
+            asPercentage: false,
+
+            wilson: [],
+            willow: [],
+            wolfgang: [],
+            wendy: [],
+            wx: [],
+            wickerbottom: [],
+            woodie: [],
+            wes: [],
+            maxwell: [],
+            wigfrid: [],
+            webber: [],
+            warly: [],
+            wormwood: [],
+            winona: [],
+            wortox: [],
+            wurt: [],
+            walter: [],
+
+            example: [["Greece", "GR", 42.5], ["Poland", "PL", 25.5], ["Germany", "DE", 10], ["France", "FR", 5.12], ["Ukraine", "UA", 1.1]],
         }
     },
 
     mounted() {
-        this.get("/lastupdate").then(resp => (this.lastupdate = resp.data));
-        this.get("/countries").then(resp => (this.countries = resp.data));
-        this.get("/characters").then(resp => (this.characters = this.transform(resp.data)));
-        this.get("/attribute/intent?limit=4").then(resp => (this.intentCount = this.transform(resp.data)));
-        this.get("/attribute/platforms").then(resp => (this.platformCount = this.transform(resp.data)));
-        this.get("/attribute/modded").then(resp => (this.moddedCount = this.transform(resp.data)));
-        this.get("/attribute/season?limit=4").then(resp => (this.seasonCount = this.transform(resp.data)));
-        this.get("/characters/united%20states").then(resp => (this.charactersOrigin = this.transform(resp.data)));
-        this.get("/count/players").then(resp => (this.playerCount = resp.data));
-        this.get("/count/servers").then(resp => (this.serverCount = resp.data));
-        this.get("/origin/players").then(resp => (this.playerOrigin = this.transform(resp.data)));
-        this.get("/origin/players?limit=200").then(resp => (this.allPlayerOrigin = this.transform(resp.data)));
-        this.get("/origin/servers").then(resp => (this.serverOrigin = this.transform(resp.data)));
-        
+        this.get("/characters")                 .then(resp => (this.characters = resp.data));
+        this.get("/characters/germany")         .then(resp => (this.charactersCountry = resp.data));
+        this.get("/meta/age")                   .then(resp => (this.age = resp.data));
+        this.get("/meta/servers")               .then(resp => (this.serverCount = resp.data));
+        this.get("/meta/players")               .then(resp => (this.playerCount = resp.data));
+        this.get("/meta/countries")             .then(resp => (this.countries = resp.data));
+        this.get("/count/servers")              .then(resp => (this.serverCountry = resp.data));
+        this.get("/count/players")              .then(resp => (this.playerCountry = resp.data));
+        this.get("/count/intent")               .then(resp => (this.intentCount = resp.data));
+        this.get("/count/platforms")            .then(resp => (this.platformCount = resp.data));
+        this.get("/count/modded")               .then(resp => (this.moddedCount = resp.data));
+        this.get("/count/season")               .then(resp => (this.seasonCount = resp.data));
+        this.get("/count/allplayers")           .then(resp => (this.allPlayerCountry = resp.data));
+
+        this.get("/characters/percentage/wilson")       .then(resp => (this.wilson = resp.data));
+        this.get("/characters/percentage/willow")       .then(resp => (this.willow = resp.data));
+        this.get("/characters/percentage/wolfgang")     .then(resp => (this.wolfgang = resp.data));
+        this.get("/characters/percentage/wendy")        .then(resp => (this.wendy = resp.data));
+        this.get("/characters/percentage/wx78")         .then(resp => (this.wx = resp.data));
+        this.get("/characters/percentage/wickerbottom") .then(resp => (this.wickerbottom = resp.data));
+        this.get("/characters/percentage/woodie")       .then(resp => (this.woodie = resp.data));
+        this.get("/characters/percentage/wes")          .then(resp => (this.wes = resp.data));
+        this.get("/characters/percentage/waxwell")      .then(resp => (this.maxwell = resp.data));
+        this.get("/characters/percentage/wathgrithr")   .then(resp => (this.wigfrid = resp.data));
+        this.get("/characters/percentage/webber")       .then(resp => (this.webber = resp.data));
+        this.get("/characters/percentage/warly")        .then(resp => (this.warly = resp.data));
+        this.get("/characters/percentage/wormwood")     .then(resp => (this.wormwood = resp.data));
+        this.get("/characters/percentage/winona")       .then(resp => (this.winona = resp.data));
+        this.get("/characters/percentage/wortox")       .then(resp => (this.wortox = resp.data));
+        this.get("/characters/percentage/wurt")         .then(resp => (this.wurt = resp.data));
+        this.get("/characters/percentage/walter")       .then(resp => (this.walter = resp.data));
     }
 }
 </script>
