@@ -118,7 +118,7 @@ export default {
     methods: {
         get(endpoint) {
             return axios
-                .get("https://dst.resamvi.io:8000" + endpoint);
+                .get("https://data.resamvi.io" + endpoint);
                 //.get("http://localhost:8000" + endpoint);
         },
         search(input) {

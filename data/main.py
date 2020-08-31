@@ -25,7 +25,7 @@ endpoints = [
 
 # Logging
 logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.WARNING)
 
 # Load .env file
 load_dotenv()

@@ -1,7 +1,7 @@
 [package]
 name = "datavizapi"
 description = "Serve collected Don't Starve Together metrics via a REST API"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Julien Midedji <Julien.Midedji@student.kit.edu>"]
 edition = "2018"
 

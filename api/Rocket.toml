@@ -4,12 +4,14 @@ db = { url = "postgres://root:password@localhost:5432/mydatabase" }
 [development]
 address = "localhost"
 log = "normal"
+port = 3000
 
 [staging]
 address = "0.0.0.0"
 log = "normal"
+port = 3000
 
 [production]
 address = "0.0.0.0"
 log = "normal"
-tls = { certs = "fullchain.pem", key = "privkey.pem" }
+port = 3000
