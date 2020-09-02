@@ -1,0 +1,138 @@
+import os
+import re
+import json
+import psycopg2
+import datetime
+import logging
+import geoip2.database
+
+from pony import orm
+
+db = orm.Database()
+
+# Convert platform number to name (see: https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data/?do=findComment&comment=1306033)
+platforms = lambda i : {1: 'Steam', 4: 'WeGame', 19: 'Console'}.get(i, str(i))
+
+# GeoIP
+reader = geoip2.database.Reader('./GeoLite2-Country.mmdb')
+
+class Server(db.Entity):
+    id              = orm.PrimaryKey(int, auto=True)
+    name            = orm.Optional(str)
+    country         = orm.Required(str)
+    iso             = orm.Required(str)
+    continent       = orm.Required(str)
+    platform        = orm.Required(str)
+    connected       = orm.Required(int)
+    maxconnections  = orm.Required(int)
+    elapsed         = orm.Required(int)
+    mode            = orm.Optional(str)
+    season          = orm.Optional(str)
+    intent          = orm.Optional(str)
+    mods            = orm.Optional(str)
+    cycle           = orm.Required(int)
+    date            = orm.Required(datetime.datetime)
+    players         = orm.Set("Player")
+
+def createServer(data, cycle):
+    # Get origin of server via IP
+    geoip       = reader.country(data["__addr"])
+    country     = geoip.country.name
+    continent   = geoip.continent.names['en']
+    iso         = geoip.country.iso_code
+
+    elapsed = re.search(r"(\d+)", data["data"])
+    elapsed = elapsed.group() if elapsed is not None else -1
+
+    srv = db.Server(
+        name            = data["name"],
+        country         = country,
+        iso             = iso,
+        continent       = continent,
+        platform        = platforms(data["platform"]),
+        connected       = data["connected"],
+        maxconnections  = data["maxconnections"],
+        elapsed         = elapsed,
+        mode            = data["mode"],
+        season          = data["season"],
+        intent          = data["intent"],
+        mods            = "vanilla" if data["mods"] else "modded",
+        cycle           = cycle,
+        date            = datetime.datetime.now()
+    )
+    logging.info("New Server: '%s'", srv.name)
+
+    return srv
+
+class Player(db.Entity):
+    id          = orm.PrimaryKey(int, auto=True)
+    cycle       = orm.Required(int)
+    name        = orm.Optional(str)
+    character   = orm.Optional(str)
+    country     = orm.Required(str)
+    iso         = orm.Required(str)
+    continent   = orm.Required(str)
+    server      = orm.Required(Server)
+
+def createPlayer(data, server, cycle):
+    if data["players"] == "return {  }":
+        return
+
+    # List of players is not json ('return {...}' for whatever reason) 
+    # so we fix that with a lot of duct tape
+    players = data["players"] \
+        .replace("return {", "[") \
+        .replace('colour=', '"colour":') \
+        .replace('prefab=', '"prefab":') \
+        .replace('eventlevel=', '"eventlevel":') \
+        .replace('name=', '"name":') \
+        .replace('netid=', '"netid":') \
+        .replace("\n}", "]") \
+        .replace('["', '"') \
+        .replace('"]=', '":')
+
+    # Some player names give me a headache
+    try:
+        players = json.loads(players)
+    except:
+        return
+    
+    for player in players:
+        pl = db.Player(
+            cycle           = cycle,
+            name            = player["name"],
+            character       = player["prefab"],
+            country         = server.country,
+            iso             = server.iso,
+            continent       = server.continent,
+            server          = server
+        )
+        logging.info("\tNew Player: '%s'", pl.name)
+
+
+# Track active player over time by their origin
+class Activity(db.Entity): # Rename Snapshot
+    id              = orm.PrimaryKey(int, auto=True)
+    date            = orm.Required(datetime.datetime)
+    countbyorigin   = orm.Required(orm.Json) # {China: 2991, USA: 320, Russia: 245, ...}
+
+# Create Views (we temporarily create a connection to execute raw sql)
+def createViews():
+    connection = psycopg2.connect(
+        port="5432",
+        user=os.getenv('POSTGRES_USER'),
+        password=os.getenv('POSTGRES_PASSWORD'),
+        database=os.getenv('DB_SHORT'),
+        host=os.getenv('DB_HOST')
+    )
+
+    cursor = connection.cursor()
+    cursor.execute(open("views.sql", "r").read())
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def clearTables():
+    db.drop_all_tables(with_all_data=True)
+    db.create_tables()
