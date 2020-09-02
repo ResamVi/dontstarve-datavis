@@ -18,11 +18,11 @@ services:
       - .env
   
   db:
-    image: "postgres:latest"
+    build: "db/."
     container_name: "db"
     env_file:
       - .env
-    volumes:
-      - ./data/volume:/var/lib/postgresql/data
+    #volumes:
+      #- ./data/volume:/var/lib/postgresql/data
     ports:
       - '5432:5432'
