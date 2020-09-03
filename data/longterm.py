@@ -125,9 +125,82 @@ def createPlayer(data, server, cycle):
             )
             logging.info("\tNew Player: '%s'", pl.name)
 
-class SeriesPlayerCount(db.Entity):
+class Series_Count(db.Entity):
     date            = orm.Required(datetime.datetime)
-    count           = orm.Required(int)
+    player_count    = orm.Required(int)
+    server_count    = orm.Required(int)
 
-def createSnapshot():
-    db.select('name FROM Person WHERE age > $x')
+class Series_Character_Count(db.Entity):
+    date            = orm.Required(datetime.datetime)
+    wilson          = orm.Required(int)
+    willow          = orm.Required(int)
+    wolfgang        = orm.Required(int)
+    wendy           = orm.Required(int)
+    wx78            = orm.Required(int)
+    wickerbottom    = orm.Required(int)
+    woodie          = orm.Required(int)
+    wes             = orm.Required(int)
+    waxwell         = orm.Required(int)
+    wathgrithr      = orm.Required(int)
+    webber          = orm.Required(int)
+    warly           = orm.Required(int)
+    wormwood        = orm.Required(int)
+    winona          = orm.Required(int)
+    wortox          = orm.Required(int)
+    wurt            = orm.Required(int)
+    walter          = orm.Required(int)
+
+class Series_Player_Count(db.Entity):
+    date            = orm.Required(datetime.datetime)
+    countries       = orm.Required(orm.Json)
+
+#class Series_Highest_Preference(db.Entity):
+#    date            = orm.Required(datetime.datetime)
+#    wilson         = orm.Required(Ranking)
+#   ...
+
+#class Ranking(db.Entity):
+#    first           = orm.Required(str)
+#    second          = orm.Required(str)
+#    third           = orm.Required(str)
+#    fourth          = orm.Required(str)
+#    fifth           = orm.Required(str)
+
+def createSnapshot(snapshot):
+    
+    db.Series_Count(
+        date            = datetime.datetime.now(),
+        player_count    = snapshot["player_count"],
+        server_count    = snapshot["server_count"]
+    )
+    
+    db.Series_Character_Count(
+        date            = datetime.datetime.now(),
+        wilson          = snapshot["character_count"]["wilson"],
+        willow          = snapshot["character_count"]["willow"],
+        wolfgang        = snapshot["character_count"]["wolfgang"],
+        wendy           = snapshot["character_count"]["wendy"],
+        wx78            = snapshot["character_count"]["wx78"],
+        wickerbottom    = snapshot["character_count"]["wickerbottom"],
+        woodie          = snapshot["character_count"]["woodie"],
+        wes             = snapshot["character_count"]["wes"],
+        waxwell         = snapshot["character_count"]["waxwell"],
+        wathgrithr      = snapshot["character_count"]["wathgrithr"],
+        webber          = snapshot["character_count"]["webber"],
+        warly           = snapshot["character_count"]["warly"],
+        wormwood        = snapshot["character_count"]["wormwood"],
+        winona          = snapshot["character_count"]["winona"],
+        wortox          = snapshot["character_count"]["wortox"],
+        wurt            = snapshot["character_count"]["wurt"],
+        walter          = snapshot["character_count"]["walter"]
+    )        
+    
+    db.Series_Player_Count(date = datetime.datetime.now(), countries = snapshot["country_count"])
+
+
+
+# Track active player over time by their origin
+#class Activity(db.Entity): # Rename Snapshot
+#    id              = orm.PrimaryKey(int, auto=True)
+#    date            = orm.Required(datetime.datetime)
+#    countbyorigin   = orm.Required(orm.Json) # {China: 2991, USA: 320, Russia: 245, ...}

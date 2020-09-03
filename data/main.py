@@ -64,25 +64,29 @@ while True:
             logging.warning("Endpoint: " + endpoint)
             
             payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
-            servers = requests.post(endpoint, data=payload).json()["GET"]
+            #servers = requests.post(endpoint, data=payload).json()["GET"]
 
             # Insert short-term data
             #for server in servers:
-                #srv = shortterm.createServer(server, cycle)
-                #shortterm.createPlayer(server, srv, cycle)
-
+            #    srv = shortterm.createServer(server, cycle)
+            #    shortterm.createPlayer(server, srv, cycle)
+            
+        snapshot = shortterm.prepareSnapshot()
+        print(snapshot)
             # Insert long-term data
-            for server in servers:
-                srv = longterm.createServer(server, cycle)
-                longterm.createPlayer(server, srv, cycle)
+            #for server in servers:
+            #    srv = longterm.createServer(server, cycle)
+            #    longterm.createPlayer(server, srv, cycle)
+
+        longterm.createSnapshot(snapshot)
     
     logging.warning("Finished Cycle " + str(cycle))
     
     cycle += 1
     time.sleep(5 * 60) # Update every 5 minutes
     
-    shortterm.clearTables()
-    shortterm.createViews()
+    #shortterm.clearTables()
+    #shortterm.createViews()
 
 
 # Sample Query

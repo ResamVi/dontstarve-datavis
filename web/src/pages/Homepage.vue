@@ -18,15 +18,7 @@
             </div>
         </div>
 
-        <h3 class="boxed">
-            Count of Characters being played
-            <a href="#" class="has-tooltip">[ ? ]
-                <span class="tooltip tooltip-top">
-                    Any non-DST or non-official characters listed were most likely
-                    added to the server via a character mod.
-                </span>
-            </a>
-        </h3>
+        <h3 class="boxed">Count of Characters being played</h3>
         <span style="float:right;">
             <input type="checkbox" v-model="includeModdedChars" @click="toggleModdedChar">
             <label for="modded-chars">Include Modded Characters</label>

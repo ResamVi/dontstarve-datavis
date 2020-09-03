@@ -4,6 +4,13 @@ SELECT
     (SELECT COUNT(*) FROM server) AS server_count, 
     (SELECT COUNT(*) FROM player) AS player_count;
 
+-- Count characters
+CREATE OR REPLACE VIEW count_character AS
+SELECT character, COUNT(character)
+FROM player
+GROUP BY character
+ORDER BY COUNT(character) DESC;
+
 -- Count by Server Country
 CREATE OR REPLACE VIEW count_server AS
 SELECT country, COUNT(country)
@@ -53,13 +60,6 @@ FROM server
 WHERE season <> ''
 GROUP BY season
 ORDER BY COUNT(season) DESC;
-
--- Count characters
-CREATE OR REPLACE VIEW count_character AS
-SELECT character, COUNT(character)
-FROM player
-GROUP BY character
-ORDER BY COUNT(character) DESC;
 
 -- Count pairs of (Character, Country) 
 CREATE OR REPLACE VIEW count_character_by_country AS
