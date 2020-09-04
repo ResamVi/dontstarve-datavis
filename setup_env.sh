@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 echo TOKEN=$TOKEN
 echo POSTGRES_USER=$POSTGRES_USER  >> .env
