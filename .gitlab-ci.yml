@@ -1,0 +1,19 @@
+# Official docker compose image.
+image:
+  name: docker/compose:latest
+
+services:
+  - docker:dind
+
+before_script:
+  - chmod +x ./setup_env.sh
+  - ./setup_env.sh
+  - docker version
+  - docker-compose version
+
+build:
+  stage: build
+  script:
+    - docker-compose down
+    - docker-compose build
+    - docker-compose up -d

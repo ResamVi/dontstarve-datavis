@@ -32,7 +32,7 @@ load_dotenv()
 
 # Silly hack to wait for docker container to initialize
 logging.warning("Waiting 5s")
-# time.sleep(5)
+time.sleep(5)
 
 # Database init
 shortterm.db.bind(

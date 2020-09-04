@@ -138,8 +138,6 @@ def clearTables():
 def getLastUpdate():
     last_update = db.select("SELECT date FROM last_update")[0]
     duration = datetime.datetime.now() - last_update
-
-    print(duration)
     return duration
 
 def prepareSnapshot():
