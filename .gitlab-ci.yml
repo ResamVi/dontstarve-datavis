@@ -6,6 +6,7 @@ services:
   - docker:dind
 
 before_script:
+  - ls
   - chmod +x ./setup_env.sh
   - ./setup_env.sh
   - docker version
