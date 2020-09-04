@@ -16,6 +16,3 @@ build:
   script:
     - docker-compose build
     - docker-compose up -d
-  environment:
-    name: prod
-    url: http://beta.resamvi.io
