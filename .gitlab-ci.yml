@@ -14,8 +14,6 @@ before_script:
 build:
   stage: build
   script:
-    - echo $DB_LONG
-    - echo $DB_HOST
-    #- docker-compose down
-    #- docker-compose build
-    #- docker-compose up
+    - docker-compose down
+    - docker-compose build
+    - docker-compose up
