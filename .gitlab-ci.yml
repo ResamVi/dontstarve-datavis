@@ -6,9 +6,6 @@ services:
   - docker:dind
 
 before_script:
-  - ls
-  - cat setup_env.sh
-  - sh
   - chmod +x ./setup_env.sh
   - ./setup_env.sh
   - docker version
@@ -19,4 +16,4 @@ build:
   script:
     - docker-compose down
     - docker-compose build
-    - docker-compose up -d
+    - docker-compose up
