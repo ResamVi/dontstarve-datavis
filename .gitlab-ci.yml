@@ -14,7 +14,6 @@ before_script:
 build:
   stage: build
   script:
-    - echo $TOKEN
     - echo $DB_LONG
     - echo $DB_HOST
     #- docker-compose down
