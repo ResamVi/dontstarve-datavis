@@ -8,8 +8,11 @@ use rocket_contrib::databases::postgres;
 
 use chrono::{Utc, Duration};
 
-#[database("db")]
-struct Db(postgres::Connection);
+#[database("shortterm")]
+struct ShortTerm(postgres::Connection);
+
+#[database("longterm")]
+struct LongTerm(postgres::Connection);
 
 // -- Data model --
 
@@ -19,10 +22,49 @@ type IsoItem = (String, String, f64); // e.g. ["Greece", "GR", 42.5], ["Poland",
 
 type Percentage = (String, f64); // e.g. ["Greece", 42.5], ["Poland", 25.5]
 
+#[derive(serde::Serialize)]
+struct Series {
+    name: String,
+    data: Vec<Item>,
+}
+
 // -- Handlers --
 
+#[get("/series/characters")]
+fn series_characters(conn: LongTerm) -> Json<Vec<Series>> {
+    
+    let query_string = "SELECT * FROM series_character_count"; // SELECT * FROM series_character_count WHERE date BETWEEN NOW() - INTERVAL '1 HOUR' AND NOW();
+
+    const CHARACTERS: [&str; 17] = [
+        "Wilson", "Willow", "Wolfgang",
+        "Wendy", "WX-78", "Wickerbottom",
+        "Woodie", "Wes", "Maxwell",
+        "Wigfrid", "Webber", "Warly",
+        "Wormwood", "Winona", "Wortox", "Wurt",
+        "Walter"];
+
+    // Prepare result object
+    let mut result: Vec<Series> = vec![];
+    for character in CHARACTERS.iter() {
+        result.push(Series{name: character.to_string(), data: Vec::new()})
+    }
+
+    for row in &conn.0.query(query_string, &[]).unwrap() {
+        
+        let date: chrono::NaiveDateTime = row.get(1);
+
+        for (i, _) in CHARACTERS.iter().enumerate() {
+            let count: i32 = row.get(2 + i);
+            result[i].data.push((date.format("%Y-%m-%dT%H:%M:%S%.f").to_string(), count as i64));
+        }
+    }
+    
+    Json(result)
+}
+
+
 #[get("/characters?<modded>")]
-fn characters(conn: Db, modded: bool) -> Json<Vec<Item>> {
+fn characters(conn: ShortTerm, modded: bool) -> Json<Vec<Item>> {
 
     let query_string = if modded {
         "SELECT character, count \
@@ -44,7 +86,7 @@ fn characters(conn: Db, modded: bool) -> Json<Vec<Item>> {
 }
 
 #[get("/characters/<country>")]
-fn characters_by_country(conn: Db, country: String) -> Json<Vec<Item>> {
+fn characters_by_country(conn: ShortTerm, country: String) -> Json<Vec<Item>> {
 
     let query_string = "
         SELECT character, count \
@@ -62,7 +104,7 @@ fn characters_by_country(conn: Db, country: String) -> Json<Vec<Item>> {
 }
 
 #[get("/characters/percentage/<character>")]
-fn country_percentage_by_character(conn:Db, character: String) -> Json<Vec<IsoItem>> {
+fn country_percentage_by_character(conn:ShortTerm, character: String) -> Json<Vec<IsoItem>> {
     let query_string = "
         SELECT character, country, iso, percent \
         FROM percentage_character_by_country \
@@ -80,7 +122,7 @@ fn country_percentage_by_character(conn:Db, character: String) -> Json<Vec<IsoIt
 }
 
 #[get("/characters/country/<country>")]
-fn country_percentage_by_country(conn:Db, country: String) -> Json<Vec<Percentage>> {
+fn country_percentage_by_country(conn:ShortTerm, country: String) -> Json<Vec<Percentage>> {
     let query_string = "
         SELECT character, percent \
         FROM percentage_character_by_country \
@@ -97,7 +139,7 @@ fn country_percentage_by_country(conn:Db, country: String) -> Json<Vec<Percentag
 }
 
 #[get("/meta/age")]
-fn age(conn: Db) -> Json<i64> {
+fn age(conn: ShortTerm) -> Json<i64> {
 
     let rows = conn.0.query("SELECT date FROM last_update", &[]).unwrap();
     
@@ -109,7 +151,7 @@ fn age(conn: Db) -> Json<i64> {
 }
 
 #[get("/meta/countries")]
-fn countries(conn: Db) -> Json<Vec<String>> {
+fn countries(conn: ShortTerm) -> Json<Vec<String>> {
 
     let mut countries: Vec<String> = vec![];
     for row in &conn.0.query("SELECT country FROM count_player", &[]).unwrap() {
@@ -120,7 +162,7 @@ fn countries(conn: Db) -> Json<Vec<String>> {
 }
 
 #[get("/meta/<ent_type>")]
-fn volume(conn: Db, ent_type: String) -> Json<i64> {
+fn volume(conn: ShortTerm, ent_type: String) -> Json<i64> {
 
     let query_string = match ent_type.as_str() {
         "players"   => "SELECT player_count FROM count",
@@ -135,7 +177,7 @@ fn volume(conn: Db, ent_type: String) -> Json<i64> {
 }
 
 #[get("/count/<ent_type>")]
-fn count(conn: Db, ent_type: String) -> Json<Vec<Item>> {
+fn count(conn: ShortTerm, ent_type: String) -> Json<Vec<Item>> {
 
     let query_string = match ent_type.as_str() {
         "allplayers"    => "SELECT country, count FROM count_player",
@@ -160,8 +202,9 @@ fn main() {
     let cors = rocket_cors::CorsOptions::default().to_cors().unwrap();
 
     rocket::ignite()
-        .mount("/", routes![country_percentage_by_character, country_percentage_by_country, characters_by_country, characters, countries, volume, count, age])
-        .attach(Db::fairing())
+        .mount("/", routes![series_characters, country_percentage_by_character, country_percentage_by_country, characters_by_country, characters, countries, volume, count, age])
+        .attach(ShortTerm::fairing())
+        .attach(LongTerm::fairing())
         .attach(cors)
         .launch();
 }

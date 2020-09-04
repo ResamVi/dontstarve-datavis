@@ -1,5 +1,6 @@
 [global.databases]
-db = { url = "postgres://root:password@localhost:5432/mydatabase" }
+shortterm = { url = "postgres://root:password@localhost:5432/shortterm" }
+longterm = { url = "postgres://root:password@localhost:5432/longterm" }
 
 [development]
 address = "localhost"

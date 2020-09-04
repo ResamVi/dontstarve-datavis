@@ -35,10 +35,15 @@ class Server(db.Entity):
     
 def createServer(data, cycle):
     # Get origin of server via IP
-    geoip       = reader.country(data["__addr"])
-    country     = geoip.country.name
-    continent   = geoip.continent.names['en']
-    iso         = geoip.country.iso_code
+    try:
+        geoip       = reader.country(data["__addr"])
+        country     = geoip.country.name
+        continent   = geoip.continent.names['en']
+        iso         = geoip.country.iso_code
+    except:
+        country     = "Antarctica"
+        continent   = "Antarctica"
+        iso         = "AQ"
 
     elapsed = re.search(r"(\d+)", data["data"])
     elapsed = elapsed.group() if elapsed is not None else -1
@@ -74,11 +79,11 @@ class Player(db.Entity):
     country     = orm.Required(str)
     iso         = orm.Required(str)
     continent   = orm.Required(str)
-    duration    = orm.Required(int)
+    duration    = orm.Required(datetime .timedelta)
     server      = orm.Required(Server)
     orm.PrimaryKey(name, server)
 
-def createPlayer(data, server, cycle):
+def createPlayer(data, server, cycle, interval):
     if data["players"] == "return {  }":
         return
 
@@ -109,7 +114,7 @@ def createPlayer(data, server, cycle):
 
         if db.Player.exists(name = player["name"], server = server):
             pl = db.Player.get(name = player["name"], server = server)
-            pl.duration += 5
+            pl.duration += interval
             db.commit()
             logging.info("\tUpdating Player: '%s' to %d", pl.name, pl.duration)
         else:
@@ -120,7 +125,7 @@ def createPlayer(data, server, cycle):
                 country         = server.country,
                 iso             = server.iso,
                 continent       = server.continent,
-                duration        = 0,
+                duration        = datetime.timedelta(),
                 server          = server
             )
             logging.info("\tNew Player: '%s'", pl.name)
@@ -154,17 +159,19 @@ class Series_Player_Count(db.Entity):
     date            = orm.Required(datetime.datetime)
     countries       = orm.Required(orm.Json)
 
-#class Series_Highest_Preference(db.Entity):
-#    date            = orm.Required(datetime.datetime)
-#    wilson         = orm.Required(Ranking)
-#   ...
-
-#class Ranking(db.Entity):
-#    first           = orm.Required(str)
-#    second          = orm.Required(str)
-#    third           = orm.Required(str)
-#    fourth          = orm.Required(str)
-#    fifth           = orm.Required(str)
+class Series_Character_Ranking(db.Entity):
+    date            = orm.Required(datetime.datetime)
+    character       = orm.Required(str)
+    first           = orm.Required(str)
+    first_percent   = orm.Required(float)
+    second          = orm.Required(str)
+    second_percent  = orm.Required(float)
+    third           = orm.Required(str)
+    third_percent   = orm.Required(float)
+    fourth          = orm.Required(str)
+    fourth_percent  = orm.Required(float)
+    fifth           = orm.Required(str)
+    fifth_percent   = orm.Required(float)
 
 def createSnapshot(snapshot):
     
@@ -197,10 +204,25 @@ def createSnapshot(snapshot):
     
     db.Series_Player_Count(date = datetime.datetime.now(), countries = snapshot["country_count"])
 
-
-
-# Track active player over time by their origin
-#class Activity(db.Entity): # Rename Snapshot
-#    id              = orm.PrimaryKey(int, auto=True)
-#    date            = orm.Required(datetime.datetime)
-#    countbyorigin   = orm.Required(orm.Json) # {China: 2991, USA: 320, Russia: 245, ...}
+    characters = ['wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly']
+    for character in characters:
+        
+        try:
+            preference = db.Series_Character_Ranking(
+                date            = datetime.datetime.now(),
+                character       = character,
+                first           = snapshot["topfive_percentage"][character][0][0],
+                first_percent   = snapshot["topfive_percentage"][character][0][1],
+                second          = snapshot["topfive_percentage"][character][1][0],
+                second_percent  = snapshot["topfive_percentage"][character][1][1],
+                third           = snapshot["topfive_percentage"][character][2][0],
+                third_percent   = snapshot["topfive_percentage"][character][2][1],
+                fourth          = snapshot["topfive_percentage"][character][3][0],
+                fourth_percent  = snapshot["topfive_percentage"][character][3][1],
+                fifth           = snapshot["topfive_percentage"][character][4][0],
+                fifth_percent   = snapshot["topfive_percentage"][character][4][1]
+            )
+        except:
+            print(character)
+            print(snapshot["topfive_percentage"][character])
+            

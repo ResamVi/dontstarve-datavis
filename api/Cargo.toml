@@ -7,6 +7,7 @@ edition = "2018"
 
 [dependencies]
 rocket = "0.4.5"
+serde = { version = "1.0.115", features = ["derive"] }
 chrono = "0.4.15"
 rocket_cors = "0.5.1"
 postgres = { version = "0.15.0", features = ["with-chrono"] } # Need to import (an old version of) postgres to get chrono for timestamp parsing

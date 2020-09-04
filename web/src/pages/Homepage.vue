@@ -53,6 +53,9 @@
         </span>
         <bar-chart :data="charactersCountry"></bar-chart>
 
+        <h3 class="boxed">Count of Characters over time</h3>
+        <line-chart :data="seriesCharacter" />
+
         <h3 class="boxed">Highest Character Preferences by Country</h3>
         <div class="c">
             <FlagRow character="Wilson"         :data=wilson />
@@ -110,8 +113,8 @@ export default {
     methods: {
         get(endpoint) {
             return axios
-                .get("https://data.resamvi.io" + endpoint);
-                //.get("http://localhost:8000" + endpoint);
+                //.get("https://data.resamvi.io" + endpoint);
+                .get("http://localhost:3000" + endpoint);
         },
         search(input) {
             if (input.length < 1) { return [] }
@@ -175,6 +178,13 @@ export default {
             wurt: [],
             walter: [],
 
+            seriesCharacter: [],
+
+            datum: [
+                {name: 'Workout',       data: [['2020-09-03T21:26:38.592354', 3], ['2020-09-03T21:22:08.314289', 4], ['2020-09-03T21:09:26.066328', 2]]},
+                {name: 'Call parents',  data: [['2020-09-03T21:26:38.592354', 5], ['2020-09-03T21:22:08.314289', 3], ['2020-09-03T21:09:26.066328', 2]]},
+            ],
+
             example: [["Greece", "GR", 42.5], ["Poland", "PL", 25.5], ["Germany", "DE", 10], ["France", "FR", 5.12], ["Ukraine", "UA", 1.1]],
         }
     },
@@ -211,6 +221,8 @@ export default {
         this.get("/characters/percentage/wortox")       .then(resp => (this.wortox = resp.data));
         this.get("/characters/percentage/wurt")         .then(resp => (this.wurt = resp.data));
         this.get("/characters/percentage/walter")       .then(resp => (this.walter = resp.data));
+
+        this.get("/series/characters")                  .then(resp => (this.seriesCharacter = resp.data));
     }
 }
 </script>

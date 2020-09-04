@@ -25,7 +25,7 @@ endpoints = [
 
 # Logging
 logging.basicConfig(format="[%(asctime)s] %(levelname)s — %(message)s")
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.WARNING)
 
 # Load .env file
 load_dotenv()
@@ -61,32 +61,35 @@ while True:
     
     with orm.db_session:
         for endpoint in endpoints:    
+            
             logging.warning("Endpoint: " + endpoint)
             
             payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
-            #servers = requests.post(endpoint, data=payload).json()["GET"]
+            
+            with requests.post(endpoint, data=payload) as answer:
+                servers = answer.json()["GET"]
 
             # Insert short-term data
-            #for server in servers:
-            #    srv = shortterm.createServer(server, cycle)
-            #    shortterm.createPlayer(server, srv, cycle)
-            
-        snapshot = shortterm.prepareSnapshot()
-        print(snapshot)
-            # Insert long-term data
-            #for server in servers:
-            #    srv = longterm.createServer(server, cycle)
-            #    longterm.createPlayer(server, srv, cycle)
+            for server in servers:
+                srv = shortterm.createServer(server, cycle)
+                shortterm.createPlayer(server, srv, cycle)
 
+            # Insert long-term data
+            for server in servers:
+                srv = longterm.createServer(server, cycle)
+                longterm.createPlayer(server, srv, cycle, shortterm.getLastUpdate())
+
+        # Insert series data
+        snapshot = shortterm.prepareSnapshot()
         longterm.createSnapshot(snapshot)
     
     logging.warning("Finished Cycle " + str(cycle))
     
     cycle += 1
-    time.sleep(5 * 60) # Update every 5 minutes
+    time.sleep(3 * 60) # Update every 5 minutes
     
-    #shortterm.clearTables()
-    #shortterm.createViews()
+    shortterm.clearTables()
+    shortterm.createViews()
 
 
 # Sample Query
