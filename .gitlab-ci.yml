@@ -8,6 +8,7 @@ services:
 before_script:
   - chmod +x ./setup_env.sh
   - ./setup_env.sh
+  - cp .env web/.env
   - docker version
   - docker-compose version
 
@@ -19,7 +20,6 @@ build_backend:
 build_frontend:
   stage: build
   script:
-    - apk --update --no-cache yarn
     - cd web
     - yarn
     - yarn build
