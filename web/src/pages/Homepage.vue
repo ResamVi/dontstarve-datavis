@@ -112,6 +112,7 @@ export default {
     },
     methods: {
         get(endpoint) {
+            console.log(process.env.VUE_APP_ENDPOINT + endpoint);
             return axios.get(process.env.VUE_APP_ENDPOINT + endpoint);
         },
         search(input) {
