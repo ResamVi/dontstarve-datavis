@@ -132,8 +132,8 @@ def createViews():
     connection.close()
 
 def clearTables():
-    db.drop_all_tables(with_all_data=True)
-    db.create_tables()
+    Player.select().delete(bulk=True)
+    Server.select().delete(bulk=True)
 
 def getLastUpdate():
     last_update = db.select("SELECT date FROM last_update")[0]
@@ -149,7 +149,7 @@ def prepareSnapshot():
     
     topfive_percentage = {}
     for character in characters:
-        list = db.select("SELECT country, percent FROM percentage_character_by_country WHERE total_count > 30 AND character = $character ORDER BY percent DESC LIMIT 5")
+        list = db.select("SELECT iso, percent FROM percentage_character_by_country WHERE total_count > 30 AND character = $character ORDER BY percent DESC LIMIT 5")
         topfive_percentage[character] = list
 
     return {

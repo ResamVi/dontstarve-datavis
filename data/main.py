@@ -60,13 +60,15 @@ while True:
     logging.warning("Starting Cycle " + str(cycle))
     
     with orm.db_session:
+        shortterm.clearTables()
+        
         for endpoint in endpoints:    
             
             logging.warning("Endpoint: " + endpoint)
             
             payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
             
-            with requests.post(endpoint, data=payload) as answer:
+            with requests.post(endpoint, data=payload, stream=True) as answer:
                 servers = answer.json()["GET"]
 
             # Insert short-term data
@@ -86,10 +88,7 @@ while True:
     logging.warning("Finished Cycle " + str(cycle))
     
     cycle += 1
-    time.sleep(3 * 60) # Update every 5 minutes
-    
-    shortterm.clearTables()
-    shortterm.createViews()
+    time.sleep(3 * 60) # Update every 3 minutes
 
 
 # Sample Query
