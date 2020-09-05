@@ -9,3 +9,4 @@ echo DB_LONG=$DB_LONG >> .env
 echo DB_HOST=$DB_HOST >> .env
 echo ROCKET_ENV=$ROCKET_ENV >> .env
 echo ROCKET_DATABASES=$ROCKET_DATABASES >> .env
+echo VUE_APP_ENDPOINT=$VUE_APP_ENDPOINT >> .env
