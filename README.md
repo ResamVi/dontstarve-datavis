@@ -13,11 +13,14 @@ docker-compose up
 
 Requires `.env` in project root that contains:
 ```
-TOKEN=<paste token here, see [here](https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data)>
-POSTGRES_USER=<select postgres username>
-POSTGRES_PASSWORD=<select postgress password>
-POSTGRES_DB=<select database name>
-DB_HOST=<"db" if running with docker-compose else most likely "localhost">
-ROCKET_ENV=<"dev" or "prod">
-ROCKET_DATABASES={ db = { url = "postgres://<postgres_user>:<postgress_password>@db:5432/<postgres_db>" } }
+TOKEN               = <paste token here, see https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data>
+POSTGRES_USER       = <select postgres username>
+POSTGRES_PASSWORD   = <select postgress password>
+POSTGRES_MULTIPLE_DATABASES = <what DB_SHORT is>,<what DB_LONG is>
+DB_SHORT            = <db name>
+DB_LONG             = <db name>
+DB_HOST             = <"db" if running with docker-compose else most likely "localhost">
+ROCKET_ENV          = <"dev" or "prod">
+ROCKET_DATABASES    = { shortterm = { url = "postgres://<POSTGRES_USER>:<POSTGRES_PASSWORD>@<DB_HOST>:5432/<DB_SHORT>" }, longterm = { url = "postgres://<POSTGRES_USER>:<POSTGRES_PASSWORD>@d<DB_HOST>:5432/<DB_LONG>" } }
+VUE_APP_ENDPOINT    = <address the frontend has to call for data e.g. "http://localhost:3000">
 ```

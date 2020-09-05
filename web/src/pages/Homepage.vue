@@ -112,9 +112,7 @@ export default {
     },
     methods: {
         get(endpoint) {
-            return axios
-                //.get("https://data.resamvi.io" + endpoint);
-                .get("http://localhost:3000" + endpoint);
+            return axios.get(process.env.VUE_APP_ENDPOINT + endpoint);
         },
         search(input) {
             if (input.length < 1) { return [] }
