@@ -11,8 +11,17 @@ before_script:
   - docker version
   - docker-compose version
 
-build:
+build_backend:
   stage: build
   script:
     - docker-compose build
     - docker-compose up -d
+build_frontend:
+  stage: build
+  script:
+    - apk --update --no-cache yarn
+    - cd web
+    - yarn
+    - yarn build
+    - ls
+    - mv dist /var/www/new
