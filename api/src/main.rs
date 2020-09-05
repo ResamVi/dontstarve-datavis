@@ -23,17 +23,20 @@ type IsoItem = (String, String, f64); // e.g. ["Greece", "GR", 42.5], ["Poland",
 type Percentage = (String, f64); // e.g. ["Greece", 42.5], ["Poland", 25.5]
 
 #[derive(serde::Serialize)]
-struct Series {
+struct Series<T> {
     name: String,
-    data: Vec<Item>,
+    data: Vec<T>,
 }
 
 // -- Handlers --
 
 #[get("/series/characters")]
-fn series_characters(conn: LongTerm) -> Json<Vec<Series>> {
+fn series_characters(conn: LongTerm) -> Json<Vec<Series<Item>>> {
     
-    let query_string = "SELECT * FROM series_character_count"; // SELECT * FROM series_character_count WHERE date BETWEEN NOW() - INTERVAL '1 HOUR' AND NOW();
+    let query_string = "
+        SELECT *
+        FROM series_character_count
+        WHERE date BETWEEN NOW() - INTERVAL '48 HOURS' AND NOW()";
 
     const CHARACTERS: [&str; 17] = [
         "Wilson", "Willow", "Wolfgang",
@@ -44,7 +47,7 @@ fn series_characters(conn: LongTerm) -> Json<Vec<Series>> {
         "Walter"];
 
     // Prepare result object
-    let mut result: Vec<Series> = vec![];
+    let mut result: Vec<Series<Item>> = vec![];
     for character in CHARACTERS.iter() {
         result.push(Series{name: character.to_string(), data: Vec::new()})
     }
@@ -62,18 +65,49 @@ fn series_characters(conn: LongTerm) -> Json<Vec<Series>> {
     Json(result)
 }
 
+#[get("/series/preferences/<character>")]
+fn series_preferences_by_characters(conn: LongTerm, character: String) -> Json<Vec<Series<Percentage>>> {
+    
+    let query_string = "
+        SELECT * FROM
+        (
+            SELECT *, ROW_NUMBER() OVER(ORDER BY date) AS rnk
+            FROM series_character_ranking
+            WHERE character = $1
+        ) AS t
+        WHERE rnk % 3 = 0
+        LIMIT 500"; // take every 3rd entry
+    
+    let mut result: Vec<Series<Percentage>> = vec![];
+    for row in &conn.0.query(query_string, &[&character]).unwrap() {
+        
+        let date: chrono::NaiveDateTime = row.get(1);
+        
+        let mut entry = Series{name: date.format("%Y-%m-%dT%H:%M:%S%.f").to_string(), data: Vec::new()};
+        
+        // id | date |character | first | first_percent | second | second_percent | ... | fifth
+        for i in [3, 5, 7, 9, 11].iter() {
+            entry.data.push((row.get(i), row.get(i+1)))
+        }
+        
+        result.push(entry);
+    }
+    
+    Json(result)
+}
+
 
 #[get("/characters?<modded>")]
 fn characters(conn: ShortTerm, modded: bool) -> Json<Vec<Item>> {
 
     let query_string = if modded {
-        "SELECT character, count \
-        FROM count_character \
+        "SELECT character, count
+        FROM count_character
         LIMIT 30"
     } else {
-        "SELECT character, count \
-        FROM count_character \
-        WHERE character \
+        "SELECT character, count
+        FROM count_character
+        WHERE character
         IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly')"
     };
 
@@ -89,11 +123,11 @@ fn characters(conn: ShortTerm, modded: bool) -> Json<Vec<Item>> {
 fn characters_by_country(conn: ShortTerm, country: String) -> Json<Vec<Item>> {
 
     let query_string = "
-        SELECT character, count \
-        FROM count_character_by_country \
-        WHERE country = $1 \
-        AND character \
-        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly');";    
+        SELECT character, count
+        FROM count_character_by_country
+        WHERE country = $1
+        AND character
+        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly')";    
 
     let mut characters: Vec<Item> = vec![];
     for row in &conn.0.query(query_string, &[&title_case(&country)]).unwrap() {
@@ -106,12 +140,12 @@ fn characters_by_country(conn: ShortTerm, country: String) -> Json<Vec<Item>> {
 #[get("/characters/percentage/<character>")]
 fn country_percentage_by_character(conn:ShortTerm, character: String) -> Json<Vec<IsoItem>> {
     let query_string = "
-        SELECT character, country, iso, percent \
-        FROM percentage_character_by_country \
-        WHERE character = $1 \
-        AND total_count > 30 \
-        ORDER BY percent DESC \
-        LIMIT 5;";
+        SELECT character, country, iso, percent
+        FROM percentage_character_by_country
+        WHERE character = $1
+        AND total_count > 30
+        ORDER BY percent DESC
+        LIMIT 5";
 
     let mut countries: Vec<IsoItem> = vec![];
     for row in &conn.0.query(query_string, &[&character]).unwrap() {        
@@ -124,11 +158,11 @@ fn country_percentage_by_character(conn:ShortTerm, character: String) -> Json<Ve
 #[get("/characters/country/<country>")]
 fn country_percentage_by_country(conn:ShortTerm, country: String) -> Json<Vec<Percentage>> {
     let query_string = "
-        SELECT character, percent \
-        FROM percentage_character_by_country \
-        WHERE country = $1 \
-        AND character \
-        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly');";
+        SELECT character, percent
+        FROM percentage_character_by_country
+        WHERE country = $1
+        AND character
+        IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly')";
 
         let mut countries: Vec<Percentage> = vec![];
         for row in &conn.0.query(query_string, &[&title_case(&country)]).unwrap() {
@@ -202,7 +236,10 @@ fn main() {
     let cors = rocket_cors::CorsOptions::default().to_cors().unwrap();
 
     rocket::ignite()
-        .mount("/", routes![series_characters, country_percentage_by_character, country_percentage_by_country, characters_by_country, characters, countries, volume, count, age])
+        .mount("/", routes![
+            series_characters, series_preferences_by_characters,
+            country_percentage_by_character, country_percentage_by_country,
+            characters_by_country, characters, countries, volume, count, age])
         .attach(ShortTerm::fairing())
         .attach(LongTerm::fairing())
         .attach(cors)

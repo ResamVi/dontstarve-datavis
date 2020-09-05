@@ -45,7 +45,7 @@
 
         <h3 class="boxed">Character Choice by Region</h3>
         <div class="center">
-            <autocomplete id="inputfield" :search="search" placeholder="Enter Country here" @submit="submit"></autocomplete>
+            <autocomplete id="country-field" :search="searchCountry" placeholder="Enter Country here" @submit="submitCountry"></autocomplete>
         </div>
         <span style="float:right;">
             <input type="checkbox" v-model="asPercentage" @click="toggleAsPercentage">
@@ -53,29 +53,40 @@
         </span>
         <bar-chart :data="charactersCountry"></bar-chart>
 
-        <h3 class="boxed">Count of Characters over time</h3>
+        <h3 class="boxed">
+            Count of Characters over time
+            <a href="#" class="has-tooltip">[ ? ]
+                <span class="tooltip tooltip-top">
+                    Times are in Central European Standard Time (CEST) or UTC+2. If you are in PST subtract 9, in EDT subtract 6.
+                </span>
+            </a>
+        </h3>
         <line-chart :data="seriesCharacter" />
 
         <h3 class="boxed">Highest Character Preferences by Country</h3>
-        <div class="c">
-            <FlagRow character="Wilson"         :data=wilson />
-            <FlagRow character="Willow"         :data=willow />
-            <FlagRow character="Wolfgang"       :data=wolfgang />
-            <FlagRow character="Wendy"          :data=wendy />
-            <FlagRow character="WX-78"          :data=wx />
-            <FlagRow character="Wickerbottom"   :data=wickerbottom />
-            <FlagRow character="Woodie"         :data=woodie />
-            <FlagRow character="Wes"            :data=wes />
-            <FlagRow character="Waxwell"        :data=waxwell />
-            <FlagRow character="Wigfrid"        :data=wigfrid />
-            <FlagRow character="Webber"         :data=webber />
-            <FlagRow character="Warly"          :data=warly />
-            <FlagRow character="Wormwood"       :data=wormwood />
-            <FlagRow character="Winona"         :data=winona />
-            <FlagRow character="Wortox"         :data=wortox />
-            <FlagRow character="Wurt"           :data=wurt />
-            <FlagRow character="Walter"         :data=walter />
+        <div>
+            <flag-row character="Wilson"         :data=wilson />
+            <flag-row character="Willow"         :data=willow />
+            <flag-row character="Wolfgang"       :data=wolfgang />
+            <flag-row character="Wendy"          :data=wendy />
+            <flag-row character="WX-78"          :data=wx />
+            <flag-row character="Wickerbottom"   :data=wickerbottom />
+            <flag-row character="Woodie"         :data=woodie />
+            <flag-row character="Wes"            :data=wes />
+            <flag-row character="Waxwell"        :data=waxwell />
+            <flag-row character="Wigfrid"        :data=wigfrid />
+            <flag-row character="Webber"         :data=webber />
+            <flag-row character="Warly"          :data=warly />
+            <flag-row character="Wormwood"       :data=wormwood />
+            <flag-row character="Winona"         :data=winona />
+            <flag-row character="Wortox"         :data=wortox />
+            <flag-row character="Wurt"           :data=wurt />
+            <flag-row character="Walter"         :data=walter />
         </div>
+
+        <h3 class="boxed">Character Preference over time</h3>
+        <autocomplete id="character-field" :search="searchCharacter" placeholder="Enter Character" @submit="submitCharacter"></autocomplete>
+        <flag-column character="Wilson" :data="seriesPreferences" />
 
         <div class="split">
             <div>
@@ -104,29 +115,45 @@
 
 <script>
 import axios from 'axios';
-import FlagRow from './FlagRow.vue';
+import FlagRow from '../components/FlagRow.vue';
+import FlagColumn from '../components/FlagColumn.vue';
 
 export default {
     components: {
-        FlagRow
+        FlagRow,
+        FlagColumn
     },
     methods: {
         get(endpoint) {
-            console.log(process.env.VUE_APP_ENDPOINT + endpoint);
             return axios.get(process.env.VUE_APP_ENDPOINT + endpoint);
         },
-        search(input) {
+        
+        searchCountry(input) {
             if (input.length < 1) { return [] }
             
             return this.countries.filter(country => {
                 return country.toLowerCase().startsWith(input.toLowerCase())
             })
         },
+        
+        searchCharacter(input) {
+            if (input.length < 1) { return [] }
+            
+            const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX78", "Wickerbottom", "Woodie", "Wes", "Waxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter"];
 
-        submit(input) {
+            return characters.filter(country => {
+                return country.toLowerCase().startsWith(input.toLowerCase())
+            })
+        },
+
+        submitCountry(input) {
             this.countryInput = input.replace(" ", "%20");
             let url = this.asPercentage ? "/characters/" : "/characters/country/";
             this.get(url + this.countryInput).then(resp => (this.charactersCountry = resp.data));
+        },
+
+        submitCharacter(input) {
+            this.get("/series/preferences/" + input.toLowerCase()).then(resp => (this.seriesPreferences = resp.data));
         },
 
         toggleModdedChar() {
@@ -178,13 +205,7 @@ export default {
             walter: [],
 
             seriesCharacter: [],
-
-            datum: [
-                {name: 'Workout',       data: [['2020-09-03T21:26:38.592354', 3], ['2020-09-03T21:22:08.314289', 4], ['2020-09-03T21:09:26.066328', 2]]},
-                {name: 'Call parents',  data: [['2020-09-03T21:26:38.592354', 5], ['2020-09-03T21:22:08.314289', 3], ['2020-09-03T21:09:26.066328', 2]]},
-            ],
-
-            example: [["Greece", "GR", 42.5], ["Poland", "PL", 25.5], ["Germany", "DE", 10], ["France", "FR", 5.12], ["Ukraine", "UA", 1.1]],
+            seriesPreferences: [],
         }
     },
 
@@ -222,6 +243,7 @@ export default {
         this.get("/characters/percentage/walter")       .then(resp => (this.walter = resp.data));
 
         this.get("/series/characters")                  .then(resp => (this.seriesCharacter = resp.data));
+        this.get("/series/preferences/wilson")          .then(resp => (this.seriesPreferences = resp.data));
     }
 }
 </script>

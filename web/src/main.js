@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import Chartkick from 'vue-chartkick';
 import Chart from 'chart.js';
 import Autocomplete from '@trevoreyre/autocomplete-vue';
+import Moment from 'vue-moment'
 import '@trevoreyre/autocomplete-vue/dist/style.css';
 import 'flag-icon-css/css/flag-icon.css';
 
@@ -14,6 +15,7 @@ import './global.css';
 Vue.use(Chartkick.use(Chart));
 Vue.use(VueRouter);
 Vue.use(Autocomplete);
+Vue.use(Moment);
 
 const router = new VueRouter({
     routes: [
