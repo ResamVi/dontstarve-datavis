@@ -38,9 +38,9 @@ def createServer(data, cycle):
     # Get origin of server via IP
     try:
         geoip       = reader.country(data["__addr"])
-        country     = geoip.country.name
         continent   = geoip.continent.names['en']
-        iso         = geoip.country.iso_code
+        country     = geoip.country.name if geoip.country.name is not None else "Antarctica"
+        iso         = geoip.country.iso_code if geoip.country.iso_code is not None else "AQ"
     except:
         country     = "Antarctica"
         continent   = "Antarctica"
@@ -144,9 +144,14 @@ def prepareSnapshot():
     server_count, player_count = db.select("SELECT server_count, player_count FROM count")[0]
     character_count = db.select("SELECT character, count FROM count_character WHERE character IN ('wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly')")
     country_count = db.select("SELECT country, count FROM count_player")
+    
+    continents = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania"]
+    continent_count = {}
+    for continent in continents:
+        count = db.select("SELECT count FROM count_continent WHERE continent = $continent")[0]
+        continent_count[continent] = count
 
     characters = ['wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly']
-    
     topfive_percentage = {}
     for character in characters:
         list = db.select("SELECT iso, percent FROM percentage_character_by_country WHERE total_count > 30 AND character = $character ORDER BY percent DESC LIMIT 5")
@@ -155,9 +160,10 @@ def prepareSnapshot():
     return {
         "player_count": player_count,
         "server_count": server_count,
+        "continent_count": continent_count,
         "character_count": dict(character_count),
         "country_count": dict(country_count),
-        "topfive_percentage": topfive_percentage
+        "topfive_percentage": topfive_percentage,
     }
 
     

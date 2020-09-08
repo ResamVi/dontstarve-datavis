@@ -29,6 +29,39 @@ struct Series<T> {
 }
 
 // -- Handlers --
+#[get("/series/continents")]
+fn series_continents(conn: LongTerm) -> Json<Vec<Series<Item>>> {
+
+    let query_string = "
+        SELECT *
+        FROM series_continent
+        ORDER BY date DESC";
+
+    const CONTINENTS: [&str; 6] = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania"];
+
+    // Prepare result object
+    let mut result: Vec<Series<Item>> = vec![];
+    for continent in CONTINENTS.iter() {
+        result.push(Series{name: continent.to_string(), data: Vec::new()})
+    }
+
+    let rows = &conn.0.query(query_string, &[]).unwrap();
+    println!("{}", rows.len());
+    for row in &conn.0.query(query_string, &[]).unwrap() {
+        
+        println!("Going");
+        let date: chrono::NaiveDateTime = row.get(1);
+        println!("{}", date.format("%Y-%m-%dT%H:%M:%S%.f").to_string());
+
+        for (i, _) in CONTINENTS.iter().enumerate() {
+            println!("{:?}", i);
+            let count: i32 = row.get(2 + i);
+            result[i].data.push((date.format("%Y-%m-%dT%H:%M:%S%.f").to_string(), count as i64));
+        }
+    }
+
+    Json(result)
+}
 
 #[get("/series/characters")]
 fn series_characters(conn: LongTerm) -> Json<Vec<Series<Item>>> {
@@ -54,7 +87,6 @@ fn series_characters(conn: LongTerm) -> Json<Vec<Series<Item>>> {
     }
 
     for row in &conn.0.query(query_string, &[]).unwrap() {
-        
         let date: chrono::NaiveDateTime = row.get(1);
 
         for (i, _) in CHARACTERS.iter().enumerate() {
@@ -238,7 +270,7 @@ fn main() {
 
     rocket::ignite()
         .mount("/", routes![
-            series_characters, series_preferences_by_characters,
+            series_characters, series_preferences_by_characters, series_continents,
             country_percentage_by_character, country_percentage_by_country,
             characters_by_country, characters, countries, volume, count, age])
         .attach(ShortTerm::fairing())

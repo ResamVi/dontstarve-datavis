@@ -32,6 +32,13 @@ FROM server
 GROUP BY platform
 ORDER BY COUNT(platform) DESC;
 
+-- Count by Continent
+CREATE OR REPLACE VIEW count_continent AS
+SELECT continent, COUNT(continent)
+FROM player
+GROUP BY continent
+ORDER BY count DESC;
+
 -- Last Update
 CREATE OR REPLACE VIEW last_update AS
 SELECT date 

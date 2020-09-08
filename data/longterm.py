@@ -37,9 +37,9 @@ def createServer(data, cycle):
     # Get origin of server via IP
     try:
         geoip       = reader.country(data["__addr"])
-        country     = geoip.country.name
         continent   = geoip.continent.names['en']
-        iso         = geoip.country.iso_code
+        country     = geoip.country.name if geoip.country.name is not None else "Antarctica"
+        iso         = geoip.country.iso_code if geoip.country.iso_code is not None else "AQ"
     except:
         country     = "Antarctica"
         continent   = "Antarctica"
@@ -173,6 +173,16 @@ class Series_Character_Ranking(db.Entity):
     fifth           = orm.Required(str)
     fifth_percent   = orm.Required(float)
 
+class Series_Continent(db.Entity):
+    date            = orm.Required(datetime.datetime)
+    asia            = orm.Required(int)
+    europe          = orm.Required(int)
+    north_america   = orm.Required(int)
+    south_america   = orm.Required(int)
+    africa          = orm.Required(int)
+    oceania         = orm.Required(int)
+    
+
 def createSnapshot(snapshot):
     
     db.Series_Count(
@@ -203,6 +213,15 @@ def createSnapshot(snapshot):
     )        
     
     db.Series_Player_Count(date = datetime.datetime.now(), countries = snapshot["country_count"])
+
+    db.Series_Continent(date = datetime.datetime.now(),
+        asia            = snapshot["continent_count"]["Asia"],
+        europe          = snapshot["continent_count"]["Europe"],
+        north_america   = snapshot["continent_count"]["North America"],
+        south_america   = snapshot["continent_count"]["South America"],
+        africa          = snapshot["continent_count"]["Africa"], 
+        oceania         = snapshot["continent_count"]["Oceania"]
+    )
 
     characters = ['wendy', 'wathgrithr', 'wilson', 'woodie', 'wolfgang', 'wickerbottom', 'wx78', 'walter', 'webber', 'winona', 'waxwell', 'wortox', 'wormwood', 'wurt', 'wes', 'willow', 'warly']
     for character in characters:

@@ -53,6 +53,9 @@
         </span>
         <bar-chart :data="charactersCountry"></bar-chart>
 
+        <h3 class="boxed">Activity over time by Continent</h3>
+        <line-chart :data="seriesContinents" />
+
         <h3 class="boxed">
             Count of Characters over time
             <a href="#" class="has-tooltip">[ ? ]
@@ -210,6 +213,7 @@ export default {
 
             seriesCharacter: [],
             seriesPreferences: [],
+            seriesContinents: [],
         }
     },
 
@@ -246,6 +250,7 @@ export default {
         this.get("/characters/percentage/wurt")         .then(resp => (this.wurt = resp.data));
         this.get("/characters/percentage/walter")       .then(resp => (this.walter = resp.data));
 
+        this.get("/series/continents")                  .then(resp => (this.seriesContinents = resp.data));
         this.get("/series/characters")                  .then(resp => (this.seriesCharacter = resp.data));
         this.get("/series/preferences/wilson")          .then(resp => (this.seriesPreferences = resp.data));
     }
