@@ -68,8 +68,10 @@ while True:
             
             payload = '{"__token": "%s", "__gameId": "DST", "query": {}}' % os.getenv("TOKEN")
             
-            with requests.post(endpoint, data=payload, stream=True) as answer:
-                servers = answer.json()["GET"]
+            try:
+                servers = requests.post(endpoint, data=payload, stream=True).json()["GET"]
+            except:
+                continue
 
             # Insert short-term data
             for server in servers:

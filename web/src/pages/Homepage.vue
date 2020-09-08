@@ -86,7 +86,7 @@
 
         <h3 class="boxed">Character Preference over time</h3>
         <autocomplete id="character-field" :search="searchCharacter" placeholder="Enter Character" @submit="submitCharacter"></autocomplete>
-        <flag-column character="Wilson" :data="seriesPreferences" />
+        <flag-column :character=characterInput :data="seriesPreferences" />
 
         <div class="split">
             <div>
@@ -153,6 +153,8 @@ export default {
         },
 
         submitCharacter(input) {
+            this.characterInput = input;
+
             this.get("/series/preferences/" + input.toLowerCase()).then(resp => (this.seriesPreferences = resp.data));
         },
 
@@ -170,6 +172,8 @@ export default {
         return {
             age: 0,
             countryInput: "germany",
+            characterInput: "Wilson",
+
             playerCount: 0,
             serverCount: 0,
             characters: [],

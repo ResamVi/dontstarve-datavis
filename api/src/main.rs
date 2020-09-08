@@ -36,7 +36,8 @@ fn series_characters(conn: LongTerm) -> Json<Vec<Series<Item>>> {
     let query_string = "
         SELECT *
         FROM series_character_count
-        WHERE date BETWEEN NOW() - INTERVAL '48 HOURS' AND NOW()";
+        WHERE date BETWEEN NOW() - INTERVAL '48 HOURS' AND NOW()
+        ORDER BY date DESC";
 
     const CHARACTERS: [&str; 17] = [
         "Wilson", "Willow", "Wolfgang",
