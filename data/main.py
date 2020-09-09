@@ -72,16 +72,19 @@ while True:
                 servers = requests.post(endpoint, data=payload, stream=True).json()["GET"]
             except:
                 continue
+            
+            try:
+                # Insert short-term data
+                for server in servers:
+                    srv = shortterm.createServer(server, cycle)
+                    shortterm.createPlayer(server, srv, cycle)
 
-            # Insert short-term data
-            for server in servers:
-                srv = shortterm.createServer(server, cycle)
-                shortterm.createPlayer(server, srv, cycle)
-
-            # Insert long-term data
-            for server in servers:
-                srv = longterm.createServer(server, cycle)
-                longterm.createPlayer(server, srv, cycle, shortterm.getLastUpdate())
+                # Insert long-term data
+                for server in servers:
+                    srv = longterm.createServer(server, cycle)
+                    longterm.createPlayer(server, srv, cycle, shortterm.getLastUpdate())
+            except:
+                continue
 
         # Insert series data
         snapshot = shortterm.prepareSnapshot()
