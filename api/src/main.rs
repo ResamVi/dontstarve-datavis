@@ -46,16 +46,11 @@ fn series_continents(conn: LongTerm) -> Json<Vec<Series<Item>>> {
         result.push(Series{name: continent.to_string(), data: Vec::new()})
     }
 
-    let rows = &conn.0.query(query_string, &[]).unwrap();
-    println!("{}", rows.len());
     for row in &conn.0.query(query_string, &[]).unwrap() {
         
-        println!("Going");
         let date: chrono::NaiveDateTime = row.get(1);
-        println!("{}", date.format("%Y-%m-%dT%H:%M:%S%.f").to_string());
 
         for (i, _) in CONTINENTS.iter().enumerate() {
-            println!("{:?}", i);
             let count: i32 = row.get(2 + i);
             result[i].data.push((date.format("%Y-%m-%dT%H:%M:%S%.f").to_string(), count as i64));
         }
@@ -105,7 +100,7 @@ fn series_preferences_by_characters(conn: LongTerm, character: String) -> Json<V
     let query_string = "
         SELECT * FROM
         (
-            SELECT *, ROW_NUMBER() OVER(ORDER BY date) AS rnk
+            SELECT *, ROW_NUMBER() OVER(ORDER BY date DESC) AS rnk
             FROM series_character_ranking
             WHERE character = $1
         ) AS t
@@ -130,6 +125,40 @@ fn series_preferences_by_characters(conn: LongTerm, character: String) -> Json<V
     Json(result)
 }
 
+#[get("/player/<attribute>/<name>")]
+fn player(conn: LongTerm, attribute: String, name: String) -> Json<Vec<Percentage>> {
+
+    if attribute != "country" && attribute != "character" {
+        return Json(vec![]);
+    }
+
+    let query_string = format!("
+            SELECT
+            {},
+            ROUND(
+                EXTRACT(epoch from SUM(duration))::DECIMAL / (
+                    SELECT EXTRACT(epoch from SUM(duration))
+                    FROM player
+                    WHERE name = $1
+                )::DECIMAL * 100, 2
+            )::float AS percentage
+        FROM player
+        WHERE name = $1
+        GROUP BY {}
+        ORDER BY percentage DESC", attribute, attribute);
+
+        let mut percentages: Vec<Percentage> = vec![];
+        for row in &conn.0.query(query_string.as_str(), &[&name]).unwrap() {
+            match attribute.as_str() {
+                "character" => percentages.push( (rename_char(row.get(0)), row.get(1)) ),
+                "country" => percentages.push((row.get(0), row.get(1))),
+                _ => panic!("should not happen")
+                
+            } 
+        }
+    
+        Json(percentages)
+}
 
 #[get("/characters?<modded>")]
 fn characters(conn: ShortTerm, modded: bool) -> Json<Vec<Item>> {
@@ -273,7 +302,7 @@ fn main() {
         .mount("/", routes![
             series_characters, series_preferences_by_characters, series_continents,
             country_percentage_by_character, country_percentage_by_country,
-            characters_by_country, characters, countries, volume, count, age])
+            characters_by_country, player, characters, countries, volume, count, age])
         .attach(ShortTerm::fairing())
         .attach(LongTerm::fairing())
         .attach(cors)

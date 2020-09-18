@@ -136,7 +136,13 @@ def clearTables():
     Server.select().delete(bulk=True)
 
 def getLastUpdate():
-    last_update = db.select("SELECT date FROM last_update")[0]
+    last_update = db.select("SELECT date FROM last_update")
+    
+    if len(last_update) == 1:
+        last_update = last_update[0]
+    else:
+        last_update = datetime.datetime.now()
+    
     duration = datetime.datetime.now() - last_update
     return duration
 

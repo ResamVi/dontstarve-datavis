@@ -91,6 +91,30 @@
         <autocomplete id="character-field" :search="searchCharacter" placeholder="Enter Character" @submit="submitCharacter"></autocomplete>
         <flag-column :character=characterInput :data="seriesPreferences" />
 
+        <h3 class="boxed">
+            Player Preferences
+            <a href="#" class="has-tooltip">[ ? ]
+                <span class="tooltip tooltip-top">
+                    No correctness guarantees. Values as percentages
+                </span>
+            </a>
+        </h3>
+        <div style="display: flex">
+            <input type="text" id="player-field" name="player-field" class="autocomplete-input" placeholder="Enter your in-game name" v-model="playerInput">
+            <button @click="submitPlayer">Submit</button>
+        </div>
+
+        <div class="split">
+            <div>
+                <h3>Characters played</h3>
+                <pie-chart :data="playerCharacters"></pie-chart>
+            </div>
+            <div>
+                <h3>Country origin of Server played in</h3>
+                <pie-chart :data="playerCountries"></pie-chart>
+            </div>
+        </div>
+
         <div class="split">
             <div>
                 <h3 class="boxed">Servers by Platform</h3>
@@ -145,29 +169,38 @@ export default {
             const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX78", "Wickerbottom", "Woodie", "Wes", "Waxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter"];
 
             return characters.filter(country => {
+                if(input === "Wigfrid") { input = "Wathgrithr";}
                 return country.toLowerCase().startsWith(input.toLowerCase())
             })
         },
 
         submitCountry(input) {
             this.countryInput = input.replace(" ", "%20");
-            let url = this.asPercentage ? "/characters/" : "/characters/country/";
+            let url = this.asPercentage ? "/characters/country/" : "/characters/";
             this.get(url + this.countryInput).then(resp => (this.charactersCountry = resp.data));
         },
 
         submitCharacter(input) {
             this.characterInput = input;
-
             this.get("/series/preferences/" + input.toLowerCase()).then(resp => (this.seriesPreferences = resp.data));
         },
 
+        submitPlayer() {
+            this.get("/player/character/" + this.playerInput).then(resp => (this.playerCharacters = resp.data));
+            this.get("/player/country/" + this.playerInput).then(resp => (this.playerCountries = resp.data));
+        },
+
         toggleModdedChar() {
-            this.get("/characters?modded=" + !this.includeModdedChars).then(resp => (this.characters = resp.data));
+            setTimeout(() => { 
+                this.get("/characters?modded=" + this.includeModdedChars).then(resp => (this.characters = resp.data));
+            }, 100);
         },
 
         toggleAsPercentage() {
-            let url = this.asPercentage ? "/characters/" : "/characters/country/";
-            this.get(url + this.countryInput).then(resp => (this.charactersCountry = resp.data));
+            setTimeout(() => { 
+                let url = this.asPercentage ? "/characters/country/" : "/characters/";
+                this.get(url + this.countryInput).then(resp => (this.charactersCountry = resp.data));
+            }, 100);
         }
     },
 
@@ -176,6 +209,10 @@ export default {
             age: 0,
             countryInput: "germany",
             characterInput: "Wilson",
+            playerInput: "",
+
+            playerCharacters: [],
+            playerCountries: [],
 
             playerCount: 0,
             serverCount: 0,
@@ -268,5 +305,12 @@ export default {
 
 .center {
     text-align: center;
+}
+
+.portrait {
+    width: 6vw;
+    height: 7vw;
+    justify-self: center;
+    align-self: center;
 }
 </style>

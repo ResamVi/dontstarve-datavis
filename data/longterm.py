@@ -18,18 +18,18 @@ reader = geoip2.database.Reader('./GeoLite2-Country.mmdb')
 class Server(db.Entity):
     name            = orm.Required(str)
     country         = orm.Required(str)
-    iso             = orm.Required(str)
-    continent       = orm.Required(str)
-    platform        = orm.Required(str)
-    connected       = orm.Required(int)
-    maxconnections  = orm.Required(int)
-    elapsed         = orm.Required(int)
+    iso             = orm.Optional(str)
+    continent       = orm.Optional(str)
+    platform        = orm.Optional(str)
+    connected       = orm.Optional(int)
+    maxconnections  = orm.Optional(int)
+    elapsed         = orm.Optional(int)
     mode            = orm.Optional(str)
     season          = orm.Optional(str)
     intent          = orm.Optional(str)
     mods            = orm.Optional(str)
-    cycle           = orm.Required(int)
-    date            = orm.Required(datetime.datetime)
+    cycle           = orm.Optional(int)
+    date            = orm.Optional(datetime.datetime)
     players         = orm.Set("Player")
     orm.PrimaryKey(name, country)
     
@@ -73,14 +73,14 @@ def createServer(data, cycle):
 
 
 class Player(db.Entity):
-    cycle       = orm.Required(int)
     name        = orm.Required(str)
-    character   = orm.Optional(str)
-    country     = orm.Required(str)
-    iso         = orm.Required(str)
-    continent   = orm.Required(str)
-    duration    = orm.Required(datetime .timedelta)
     server      = orm.Required(Server)
+    cycle       = orm.Optional(int)
+    character   = orm.Optional(str)
+    country     = orm.Optional(str)
+    iso         = orm.Optional(str)
+    continent   = orm.Optional(str)
+    duration    = orm.Optional(datetime .timedelta)
     orm.PrimaryKey(name, server)
 
 def createPlayer(data, server, cycle, interval):
@@ -125,7 +125,7 @@ def createPlayer(data, server, cycle, interval):
                 country         = server.country,
                 iso             = server.iso,
                 continent       = server.continent,
-                duration        = datetime.timedelta(),
+                duration        = datetime.timedelta(seconds=1),
                 server          = server
             )
             logging.info("\tNew Player: '%s'", pl.name)

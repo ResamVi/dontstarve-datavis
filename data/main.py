@@ -60,8 +60,9 @@ while True:
     logging.warning("Starting Cycle " + str(cycle))
     
     with orm.db_session:
+        interval = shortterm.getLastUpdate()
         shortterm.clearTables()
-        
+
         for endpoint in endpoints:    
             
             logging.warning("Endpoint: " + endpoint)
@@ -70,10 +71,7 @@ while True:
             
             try:
                 servers = requests.post(endpoint, data=payload, stream=True).json()["GET"]
-            except:
-                continue
-            
-            try:
+
                 # Insert short-term data
                 for server in servers:
                     srv = shortterm.createServer(server, cycle)
@@ -82,7 +80,7 @@ while True:
                 # Insert long-term data
                 for server in servers:
                     srv = longterm.createServer(server, cycle)
-                    longterm.createPlayer(server, srv, cycle, shortterm.getLastUpdate())
+                    longterm.createPlayer(server, srv, cycle, interval)
             except:
                 continue
 
