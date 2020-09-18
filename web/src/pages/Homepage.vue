@@ -89,7 +89,7 @@
 
         <h3 class="boxed">Character Preference over time</h3>
         <autocomplete id="character-field" :search="searchCharacter" placeholder="Enter Character" @submit="submitCharacter"></autocomplete>
-        <flag-column :character=characterInput :data="seriesPreferences.reverse()" />
+        <flag-column :character=characterInput :data="seriesPreferences" />
 
         <div class="split">
             <div>
