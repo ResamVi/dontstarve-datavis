@@ -87,8 +87,11 @@ while True:
                 continue
 
         # Insert series data
-        snapshot = shortterm.prepareSnapshot()
-        longterm.createSnapshot(snapshot)
+        try:
+            snapshot = shortterm.prepareSnapshot()
+            longterm.createSnapshot(snapshot)
+        except:
+            continue
     
     logging.warning("Finished Cycle " + str(cycle))
     

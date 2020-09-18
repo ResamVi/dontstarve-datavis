@@ -35,6 +35,7 @@ fn series_continents(conn: LongTerm) -> Json<Vec<Series<Item>>> {
     let query_string = "
         SELECT *
         FROM series_continent
+        WHERE date BETWEEN NOW() - INTERVAL '5 DAYS' AND NOW()
         ORDER BY date DESC";
 
     const CONTINENTS: [&str; 6] = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania"];
@@ -69,7 +70,7 @@ fn series_characters(conn: LongTerm) -> Json<Vec<Series<Item>>> {
     let query_string = "
         SELECT *
         FROM series_character_count
-        WHERE date BETWEEN NOW() - INTERVAL '48 HOURS' AND NOW()
+        WHERE date BETWEEN NOW() - INTERVAL '5 DAYS' AND NOW()
         ORDER BY date DESC";
 
     const CHARACTERS: [&str; 17] = [
