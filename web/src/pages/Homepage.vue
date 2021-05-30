@@ -152,7 +152,7 @@ export default {
     },
     methods: {
         get(endpoint) {
-            return axios.get(process.env.VUE_APP_ENDPOINT + endpoint);
+            return axios.get("https://data.resamvi.io" + endpoint);
         },
         
         searchCountry(input) {
