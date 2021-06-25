@@ -10,10 +10,10 @@
                 <p>
                     This project was created by <a href="https://resamvi.io/">ResamVi</a> and you can find the code <a href="https://github.com/ResamVi">here</a>.
                     The backend logic and this website are GPL licensed (feel free to modify, but keep it open for everyone). 
-                    The project is still in its infancy with development started in August 2020. We may see in the future where this will be going.
+                    The project is a side-gig I did for fun in August 2020 and is currently in maintenance mode.
+                </p>
                 <p>
-                    I'm always a bit swamped with university but otherwise would be happy about any contact and meeting everyone in-game. Don't hesitate to reach out:
-                    <a href="https://steamcommunity.com/profiles/76561198969315128/">Steam</a>
+                    You can write me a <a href="mailto:julien.midedji@gmail.com">mail</a> if you need something 
                 </p>
                 <p>
                     Sincerely, ResamVi

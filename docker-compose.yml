@@ -1,28 +1,56 @@
 version: '3'
 
 services:
-  rust:
-    build: "api/."
-    container_name: "rust"
-    env_file:
-      - .env
+  web:
+    container_name: "dstweb"
+    build: "web/."
+    restart: always
     ports:
-      - '3000:3000'
-
-  python:
-    build: data/.
-    container_name: "python"
-    depends_on:
-      - db
-    env_file:
-      - .env
+      - "85:80"
   
+  fetcher:
+    container_name: "fetcher"
+    environment: 
+      - USER=root
+      - PASSWORD=password
+      - DBNAME=dststats
+      - DBPORT=5432
+      - TOKEN=<YOUR TOKEN HERE>
+    build: 
+      context: backend
+      dockerfile: "fetcher/Dockerfile"
+
+  server:
+    container_name: "dstserver"
+    build: 
+      context: backend
+      dockerfile: "api/Dockerfile"
+    restart: always
+    ports: 
+      - "3000:3000"
+    environment: 
+      - USER=root
+      - PASSWORD=password
+      - DBNAME=dststats
+      - DBPORT=5432
+    
+
   db:
-    build: "db/."
-    container_name: "db"
-    env_file:
-      - .env
+    container_name: "postgres"
+    image: "postgres:latest"
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dststats
     volumes:
-      - ./data/volume:/var/lib/postgresql/data
+      - dst-data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+
+volumes: 
+  dst-data:
+
+#network:
+  #main
+    #external: true

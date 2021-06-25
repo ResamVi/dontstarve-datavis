@@ -2,7 +2,7 @@
     <div class="container">
         <img :src="require(`../assets/${this.character}.png`)" class="portrait">
         <div class="column" v-for="(entry, i) in data" :key="i">
-            <span class="date">{{ entry["name"] | moment("DD.MM. HH:mm") }}</span>
+            <span class="date">{{ entry["name"] }}</span>
             <span :class="flag(entry['data'][0][0])"></span> 
             <span :class="flag(entry['data'][1][0])"></span> 
             <span :class="flag(entry['data'][2][0])"></span> 
