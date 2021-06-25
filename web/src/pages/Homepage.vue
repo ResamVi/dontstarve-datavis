@@ -160,7 +160,7 @@ export default {
         searchCharacter(input) {
             if (input.length < 1) { return [] }
             
-            const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX78", "Wickerbottom", "Woodie", "Wes", "Waxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter"];
+            const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX-78", "Wickerbottom", "Woodie", "Wes", "Maxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter"];
 
             return characters.filter(country => {
                 return country.toLowerCase().startsWith(input.toLowerCase())
