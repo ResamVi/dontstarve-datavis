@@ -64,7 +64,7 @@ func main() {
 		log.Infof("Finished cycle no. %d", fetch.Cycle())
 		previousCycle = time.Now()
 
-		time.Sleep(5 * time.Minute)
+		time.Sleep(15 * time.Minute)
 	}
 }
 
