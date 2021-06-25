@@ -79,7 +79,7 @@ func (s Service) CountSeason() []Item {
 		m[server.Season]++
 	}
 
-	return toItems(m)
+	return toItems(m)[:4]
 }
 
 func (s Service) CountModded() []Item {
