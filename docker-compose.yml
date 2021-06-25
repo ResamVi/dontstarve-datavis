@@ -7,7 +7,9 @@ services:
     restart: always
     ports:
       - "85:80"
-  
+    #networks:
+    #  - main
+
   fetcher:
     container_name: "fetcher"
     environment: 
@@ -19,6 +21,8 @@ services:
     build: 
       context: backend
       dockerfile: "fetcher/Dockerfile"
+    #networks:
+    #  - main
 
   server:
     container_name: "dstserver"
@@ -33,7 +37,8 @@ services:
       - PASSWORD=password
       - DBNAME=dststats
       - DBPORT=5432
-    
+    #networks:
+    #  - main
 
   db:
     container_name: "postgres"
@@ -47,10 +52,12 @@ services:
       - dst-data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+    #networks:
+    #  - main
 
 volumes: 
   dst-data:
 
-#network:
-  #main
+#networks:
+  #main:
     #external: true

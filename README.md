@@ -6,6 +6,29 @@ This website is dedicated to players who have asked themselves "But who is the m
 *[Check it out here](https://dst.resamvi.io/#/)*
 
 # Running 
+Setup Discord hook to get notifications
+
+`backend/alert/alerts.go`
+```
+discord.WebhookURL = "https://discord.com/api/webhooks/..."
+```
+
+Insert Token 
+
+`docker-compose.yml`
+```
+TOKEN=<YOUR TOKEN HERE>
+```
+
+Set public URL to access backend (from frontend)
+
+`web/Dockerfile`
+```
+ENV VUE_APP_SERVER_ENDPOINT="https://dststat.resamvi.io"
+```
+
+Start Running
+
 ```
 docker-compose build
 docker-compose up
