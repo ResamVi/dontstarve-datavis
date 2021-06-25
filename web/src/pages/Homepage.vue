@@ -162,8 +162,8 @@ export default {
             
             const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX-78", "Wickerbottom", "Woodie", "Wes", "Maxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter"];
 
-            return characters.filter(country => {
-                return country.toLowerCase().startsWith(input.toLowerCase())
+            return characters.filter(char => {
+                return char.toLowerCase().startsWith(input.toLowerCase())
             })
         },
 
@@ -172,8 +172,8 @@ export default {
             this.get("/characters/" + this.countryInput).then(resp => (this.charactersCountry = resp.data));
         },
 
-        submitCharacter(input) {
-            this.characterInput = input;
+        submitCharacter(input) {            
+            this.characterInput = input !== undefined ? input : "Wilson";
             this.get("/series/preferences/" + input).then(resp => (this.seriesPreferences = resp.data));
         },
 
