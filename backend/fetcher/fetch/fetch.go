@@ -52,10 +52,7 @@ func Init(token string) (*Fetch, error) {
 // If it cannot do any of those things it will fail silently: this
 // behavior is intended to keep running but simply skip one cycle
 func (f *Fetch) Servers() []model.Server {
-	serverList, err := f.readServerList()
-	if err != nil {
-		panic(err)
-	}
+	serverList := f.readServerList()
 	if len(serverList) == 0 {
 		panic("Server list is empty")
 	}
@@ -120,6 +117,8 @@ func (f Fetch) parsePlayers(server ServerJSON) []model.Player {
 		"\a", "",
 		"\x11", "",
 		"\x14", "",
+		"\x0e", "",
+		"ó", "o",
 	)
 	s := r.Replace(server["players"].(string))
 
@@ -185,7 +184,7 @@ var endpoints = []string{
 }
 
 // readServerList reads from all of klei's endpoints
-func (f Fetch) readServerList() (ServerList, error) {
+func (f Fetch) readServerList() ServerList {
 	payload := fmt.Sprintf(`{
 		"__token": "%s", 
 		"__gameId": "DST", 
@@ -197,29 +196,29 @@ func (f Fetch) readServerList() (ServerList, error) {
 
 		resp, err := http.Post(endpoint, "application/json", strings.NewReader(payload))
 		if err != nil {
-			return nil, errors.New("could not request server list: " + err.Error())
+			alert.Panic("could not request server list: " + err.Error())
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, errors.New("Could not read answer to request: " + err.Error())
+			alert.Panic("Could not read answer to request: " + err.Error() + "\n contents: " + string(body))
 		}
 
 		if string(body) == `{"error":"AUTH_ERROR_E_EXPIRED_TOKEN"}` {
-			return nil, errors.New("authorization failed, token seems to be expired/invalid")
+			alert.Panic("authorization failed, token seems to be expired/invalid")
 		}
 
 		var servers ParsedResponse
 		err = json.Unmarshal(body, &servers)
 		if err != nil {
-			return nil, errors.New("could not unmarshal answer: '" + string(body) + "'\n" + err.Error())
+			alert.Panic("could not unmarshal answer: '" + string(body) + "'\n" + err.Error())
 		}
 
 		serverlist = append(serverlist, servers["GET"]...)
 	}
 
-	return serverlist, nil
+	return serverlist
 }
 
 // first number indicates days elapsed
