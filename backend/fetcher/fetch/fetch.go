@@ -116,6 +116,7 @@ func (f Fetch) parsePlayers(server ServerJSON) []model.Player {
 		"\t", "",
 		"\a", "",
 		"\x11", "",
+		"\x01", "",
 		"\x14", "",
 		"\x0e", "",
 		"ó", "o",
@@ -128,7 +129,10 @@ func (f Fetch) parsePlayers(server ServerJSON) []model.Player {
 	var ps []model.Player
 	err := json.Unmarshal(b, &ps)
 	if err != nil {
-		alert.Msg("Could not unmarshal: '" + string(b) + "'\n" + err.Error())
+		if e, ok := err.(*json.SyntaxError); ok {
+			alert.Msg(fmt.Sprintf("unmarshal error at byte offset %d", e.Offset))
+		}
+
 		return []model.Player{}
 	}
 
@@ -196,23 +200,30 @@ func (f Fetch) readServerList() ServerList {
 
 		resp, err := http.Post(endpoint, "application/json", strings.NewReader(payload))
 		if err != nil {
-			alert.Panic("could not request server list: " + err.Error())
+			alert.Msg("could not request server list: " + err.Error())
+			return []ServerJSON{}
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			alert.Panic("Could not read answer to request: " + err.Error() + "\n contents: " + string(body))
+			alert.Msg("Could not read answer to request: " + err.Error() + "\n contents: " + string(body))
+			return []ServerJSON{}
 		}
 
 		if string(body) == `{"error":"AUTH_ERROR_E_EXPIRED_TOKEN"}` {
-			alert.Panic("authorization failed, token seems to be expired/invalid")
+			alert.Msg("authorization failed, token seems to be expired/invalid")
+			return []ServerJSON{}
 		}
 
 		var servers ParsedResponse
 		err = json.Unmarshal(body, &servers)
 		if err != nil {
-			alert.Panic("could not unmarshal answer: '" + string(body) + "'\n" + err.Error())
+			alert.Msg("could not unmarshal answer: '" + string(body) + "'\n" + err.Error())
+			if e, ok := err.(*json.SyntaxError); ok {
+				alert.Msg(fmt.Sprintf("syntax error at byte offset %d", e.Offset))
+			}
+			return []ServerJSON{}
 		}
 
 		serverlist = append(serverlist, servers["GET"]...)

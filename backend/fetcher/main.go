@@ -68,7 +68,7 @@ func main() {
 	}
 }
 
-// docker run --rm --name postgres --network="host" -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase postgres
+// docker run --rm --name postgrestmp --network="host" -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase postgres
 
 func isProd() bool {
 	_, isProd := os.LookupEnv("PROD")

@@ -68,7 +68,7 @@ func Init(host, user, password, dbname, dbport string) Store {
 	if err != nil {
 		log.Panicf("Could not connect do database: %s", err.Error())
 	} else {
-		log.Error("Conection to database succesful")
+		log.Info("Conection to database succesful")
 	}
 
 	db.AutoMigrate(
