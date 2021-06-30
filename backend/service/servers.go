@@ -47,7 +47,8 @@ func (s Service) CountCountry() []Item {
 	return toItems(m)[:min(len(m), 20)]
 }
 
-//
+// Return the distribution of cooperative/social/madness/competitive servers
+// There seems to others (survival, endless, wilderness) on this so only return top 4
 func (s Service) CountIntent() []Item {
 	servers := s.store.GetAllServers()
 
@@ -56,7 +57,7 @@ func (s Service) CountIntent() []Item {
 		m[server.Intent]++
 	}
 
-	return toItems(m)[:4]
+	return toItems(m)[:min(len(m), 4)]
 }
 
 //
@@ -79,7 +80,7 @@ func (s Service) CountSeason() []Item {
 		m[server.Season]++
 	}
 
-	return toItems(m)[:4]
+	return toItems(m)[:min(len(m), 4)]
 }
 
 func (s Service) CountModded() []Item {

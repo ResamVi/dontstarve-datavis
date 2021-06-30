@@ -52,9 +52,9 @@ func Init(token string) (*Fetch, error) {
 // If it cannot do any of those things it will fail silently: this
 // behavior is intended to keep running but simply skip one cycle
 func (f *Fetch) Servers() []model.Server {
-	serverList := f.readServerList()
-	if len(serverList) == 0 {
-		panic("Server list is empty")
+	serverList, err := f.readServerList()
+	if err != nil {
+		alert.Msg(err.Error())
 	}
 
 	servers := make([]model.Server, 0)
@@ -188,7 +188,7 @@ var endpoints = []string{
 }
 
 // readServerList reads from all of klei's endpoints
-func (f Fetch) readServerList() ServerList {
+func (f Fetch) readServerList() (ServerList, error) {
 	payload := fmt.Sprintf(`{
 		"__token": "%s", 
 		"__gameId": "DST", 
@@ -200,36 +200,33 @@ func (f Fetch) readServerList() ServerList {
 
 		resp, err := http.Post(endpoint, "application/json", strings.NewReader(payload))
 		if err != nil {
-			alert.Msg("could not request server list: " + err.Error())
-			return []ServerJSON{}
+			return []ServerJSON{}, errors.New("could not request server list: " + err.Error())
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			alert.Msg("Could not read answer to request: " + err.Error() + "\n contents: " + string(body))
-			return []ServerJSON{}
+			return []ServerJSON{}, errors.New("Could not read answer to request: " + err.Error() + "\n contents: " + string(body))
 		}
 
 		if string(body) == `{"error":"AUTH_ERROR_E_EXPIRED_TOKEN"}` {
-			alert.Msg("authorization failed, token seems to be expired/invalid")
-			return []ServerJSON{}
+			return []ServerJSON{}, errors.New("authorization failed, token seems to be expired/invalid")
 		}
 
 		var servers ParsedResponse
 		err = json.Unmarshal(body, &servers)
 		if err != nil {
-			alert.Msg("could not unmarshal answer: '" + string(body) + "'\n" + err.Error())
 			if e, ok := err.(*json.SyntaxError); ok {
 				alert.Msg(fmt.Sprintf("syntax error at byte offset %d", e.Offset))
 			}
-			return []ServerJSON{}
+
+			return []ServerJSON{}, errors.New("could not unmarshal answer: '" + string(body) + "'\n" + err.Error())
 		}
 
 		serverlist = append(serverlist, servers["GET"]...)
 	}
 
-	return serverlist
+	return serverlist, nil
 }
 
 // first number indicates days elapsed

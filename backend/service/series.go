@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	"dontstarve-stats/alert"
 	"dontstarve-stats/model"
 )
 
@@ -85,6 +86,11 @@ func (s Service) PercentageSnapshot() {
 
 	for _, character := range CHARACTERS {
 		ranking := s.GetCountryCharacters(character)
+
+		if len(ranking) < 5 {
+			alert.Msg("PercentageSnapshot() unsuccesful: too few in ranking")
+			return
+		}
 
 		s.store.CreatePercentageSnapshot(model.PercentageSnapshot{
 			Date:          time.Now().Local(),
