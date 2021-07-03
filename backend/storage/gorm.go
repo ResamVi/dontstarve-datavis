@@ -15,19 +15,19 @@ import (
 
 // TODO: embedd interface
 type Store interface {
-	Start()
 	GetAge() time.Time
+	Start() // Call to keep track of the age of the data
 
 	//CreatePlayer() Not needed because CreateServers creates Players as well
 	GetAllPlayers() []model.Player
 	DeleteAllPlayers()
 
-	GetPlayerStat(name string) model.PlayerStat
-	UpdatePlayerStat(model.PlayerStat)
-
 	CreateServers(servers []model.Server)
 	DeleteAllServers()
 	GetAllServers() []model.Server
+
+	GetPlayerStat(name string) model.PlayerStat
+	UpdatePlayerStat(model.PlayerStat)
 
 	CreateContinentSnapshot(continents map[string]int)
 	GetSeriesContinents() []model.ContinentSnapshot
@@ -43,7 +43,7 @@ type Gorm struct {
 	db *gorm.DB
 }
 
-func Init(host, user, password, dbname, dbport string) Store {
+func New(host, user, password, dbname, dbport string) Store {
 	dataSourceName := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Berlin",
 		host, user, password, dbname, dbport,
@@ -68,7 +68,7 @@ func Init(host, user, password, dbname, dbport string) Store {
 	if err != nil {
 		log.Panicf("Could not connect do database: %s", err.Error())
 	} else {
-		log.Info("Conection to database succesful")
+		log.Info("Connection to database succesful")
 	}
 
 	db.AutoMigrate(

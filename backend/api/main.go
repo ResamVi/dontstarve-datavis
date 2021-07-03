@@ -18,7 +18,7 @@ func main() {
 
 	var store storage.Store
 	if !isProd() {
-		store = storage.Init(
+		store = storage.New(
 			"localhost",
 			"root",
 			"password",
@@ -27,7 +27,7 @@ func main() {
 		)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
-		store = storage.Init(
+		store = storage.New(
 			"db",
 			os.Getenv("USER"),
 			os.Getenv("PASSWORD"),
@@ -131,8 +131,6 @@ func main() {
 
 	r.Run("0.0.0.0:3000")
 }
-
-// docker run --rm --name postgres_tmp --network="host" -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase postgres
 
 // isProd assumes we run in a docker environment
 func isProd() bool {

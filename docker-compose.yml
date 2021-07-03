@@ -11,7 +11,8 @@ services:
     #  - main
 
   fetcher:
-    container_name: "fetcher"
+    container_name: "dstfetcher"
+    restart: always
     environment: 
       - USER=root
       - PASSWORD=password
@@ -20,7 +21,7 @@ services:
       - TOKEN=<YOUR TOKEN HERE>
     build: 
       context: backend
-      dockerfile: "fetcher/Dockerfile"
+      dockerfile: "fetch/Dockerfile"
     #networks:
     #  - main
 
@@ -40,8 +41,9 @@ services:
     #networks:
     #  - main
 
+  # docker run --rm --name postgres_tmp --network="host" -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase postgres
   db:
-    container_name: "postgres"
+    container_name: "dstpostgres"
     image: "postgres:latest"
     restart: always
     environment:
@@ -54,6 +56,16 @@ services:
       - '5432:5432'
     #networks:
     #  - main
+
+  # docker run --rm --name redis_tmp --network="host" redis
+  redis:
+    container_name: "dstcache"
+    image: "redis:latest"
+    command: redis-server --requirepass redispassword
+    ports:
+      - "6379:6379"
+    #networks:
+    # - main
 
 volumes: 
   dst-data:

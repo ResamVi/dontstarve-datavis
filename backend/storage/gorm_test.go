@@ -13,7 +13,7 @@ func initDB() Store {
 	os.Setenv("DBPORT", "5432")
 	os.Setenv("TOKEN", "<YOUR TOKEN HERE>")
 
-	return Init(
+	return New(
 		os.Getenv("HOST"),
 		os.Getenv("USER"),
 		os.Getenv("PASSWORD"),

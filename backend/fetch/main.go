@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"dontstarve-stats/alert"
-	"dontstarve-stats/fetcher/fetch"
+	"dontstarve-stats/fetch/fetcher"
 	"dontstarve-stats/service"
 
 	"dontstarve-stats/storage"
@@ -17,8 +17,9 @@ func main() {
 	defer alert.Msg("Service 'fetcher' has stopped running")
 
 	var store storage.Store
+
 	if !isProd() {
-		store = storage.Init(
+		store = storage.New(
 			"localhost",
 			"root",
 			"password",
@@ -26,9 +27,9 @@ func main() {
 			"5432",
 		)
 
-		os.Setenv("TOKEN", "<INSERT YOUR TOKEN>")
+		os.Setenv("TOKEN", "<TOKEN HERE>")
 	} else {
-		store = storage.Init(
+		store = storage.New(
 			"db",
 			os.Getenv("USER"),
 			os.Getenv("PASSWORD"),
@@ -37,10 +38,7 @@ func main() {
 		)
 	}
 
-	fetch, err := fetch.Init(os.Getenv("TOKEN"))
-	if err != nil {
-		panic(err)
-	}
+	fetch := fetcher.New(os.Getenv("TOKEN"))
 
 	svc := service.New(store)
 

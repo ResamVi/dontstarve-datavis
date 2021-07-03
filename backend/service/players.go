@@ -3,23 +3,34 @@ package service
 import (
 	"time"
 
+	"dontstarve-stats/cache"
 	"dontstarve-stats/model"
 )
 
-// PlayerStore documents all required methods to a database
-// necessary to serve player data
-type PlayerStore interface {
-}
-
 // CountPlayers returns the total players online
 func (s Service) CountPlayers() int {
+	if cache.Exists("player_count") {
+		val, err := cache.Get("player_count").Int()
+		if err != nil {
+			panic(err)
+		}
+
+		return val
+	}
+
 	players := s.store.GetAllPlayers()
+
+	cache.Set("player_count", len(players))
 
 	return len(players)
 }
 
 // CountCharacters returns how often each character is picked
-func (s Service) CountCharacters(includeModded bool) []Item {
+func (s Service) CountCharacters(includeModded bool) []model.Item {
+	if cache.Exists("character_count") && !includeModded {
+		return cache.GetItems("character_count")
+	}
+
 	players := s.store.GetAllPlayers()
 
 	m := make(map[string]int)
@@ -28,13 +39,20 @@ func (s Service) CountCharacters(includeModded bool) []Item {
 			m[player.Character]++
 		}
 	}
+	result := toItems(m)
 
-	return toItems(m)
+	cache.SetItems("character_count", result)
+
+	return result
 }
 
 // CountPlayerOrigin returns the countries where the majority of players come from (the top 20 highest countries only)
 // Note: Player inherit their origin from the server's origin (i.e. its IP), so German players on french servers are French
-func (s Service) CountPlayerOrigin(includeAll bool) []Item {
+func (s Service) CountPlayerOrigin(includeAll bool) []model.Item {
+	if cache.Exists("player_origin") && !includeAll {
+		return cache.GetItems("player_origin")
+	}
+
 	players := s.store.GetAllPlayers()
 
 	m := make(map[string]int)
@@ -46,11 +64,19 @@ func (s Service) CountPlayerOrigin(includeAll bool) []Item {
 		return toItems(m)
 	}
 
-	return toItems(m)[:min(20, len(m))]
+	result := toItems(m)[:min(20, len(m))]
+
+	cache.SetItems("player_origin", result)
+
+	return result
 }
 
 // GetCountryPreference returns how often each character is picked for a specific country
-func (s Service) GetCountryPreference(country string) []Item {
+func (s Service) GetCountryPreference(country string) []model.Item {
+	if cache.Exists("country_preference") {
+		return cache.GetItems("country_preference")
+	}
+
 	players := s.store.GetAllPlayers()
 
 	m := make(map[string]int)
@@ -66,7 +92,11 @@ func (s Service) GetCountryPreference(country string) []Item {
 		m[player.Character]++
 	}
 
-	return toItems(m)
+	result := toItems(m)
+
+	cache.SetItems("country_preference", result)
+
+	return result
 }
 
 // Given the list of current players compare to the previous
@@ -132,11 +162,12 @@ func (s Service) TrackPlaytime(servers []model.Server, lastCheck time.Time) {
 }
 
 // GetPlayTime returns how much he plays each character
-func (s Service) GetPlayTime(name string) []Item {
+func (s Service) GetPlayTime(name string) []model.Item {
+
 	stats := s.store.GetPlayerStat(name)
 
 	toHours := float64(60 * 60)
-	return sortFloatDescending([]Item{
+	return sortFloatDescending([]model.Item{
 		{"Wendy", round(stats.Wendy / toHours)},
 		{"Wigfrid", round(stats.Wigfrid / toHours)},
 		{"Wilson", round(stats.Wilson / toHours)},

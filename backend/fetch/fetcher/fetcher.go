@@ -1,6 +1,7 @@
-package fetch
+package fetcher
 
 import (
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,8 +21,8 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-// Fetch is the main orchestrator to get the data
-type Fetch struct {
+// Fetcher is the main orchestrator to get the data
+type Fetcher struct {
 	cycle int    // how often Servers() has been called
 	token string // token as per https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data
 	geoip *geoip2.Reader
@@ -37,21 +38,24 @@ type ServerList []ServerJSON
 // ServerJSON is json representation of a single joinable Don't Starve Together ServerJSON
 type ServerJSON map[string]interface{}
 
-// Init runs all necessary steps to request, retrieve, interpret and persist don't starve together server info
-func Init(token string) (*Fetch, error) {
-	geoip, err := geoip2.Open("GeoLite2-Country.mmdb")
+//go:embed GeoLite2-Country.mmdb
+var geoipfile []byte
+
+// New runs all necessary steps to request, retrieve, interpret and persist don't starve together server info
+func New(token string) *Fetcher {
+	geoip, err := geoip2.FromBytes(geoipfile)
 	if err != nil {
-		return nil, errors.New("could not open geolite db: " + err.Error())
+		panic("could not open geolite db: " + err.Error())
 	}
 
-	return &Fetch{token: token, geoip: geoip}, nil
+	return &Fetcher{token: token, geoip: geoip}
 }
 
 // Servers reads and parses all servers (and their containing players) shown in the server list
 //
 // If it cannot do any of those things it will fail silently: this
 // behavior is intended to keep running but simply skip one cycle
-func (f *Fetch) Servers() []model.Server {
+func (f *Fetcher) Servers() []model.Server {
 	serverList, err := f.readServerList()
 	if err != nil {
 		alert.Msg(err.Error())
@@ -72,7 +76,7 @@ func (f *Fetch) Servers() []model.Server {
 }
 
 // parseServer parses the data and reduces it down the relevant data we require
-func (f Fetch) parseServer(server ServerJSON) model.Server {
+func (f Fetcher) parseServer(server ServerJSON) model.Server {
 	country, continent, iso := f.geolocate(server["__addr"].(string))
 
 	return model.Server{
@@ -93,7 +97,7 @@ func (f Fetch) parseServer(server ServerJSON) model.Server {
 }
 
 // parsePlayer creates the player that are part of a server
-func (f Fetch) parsePlayers(server ServerJSON) []model.Player {
+func (f Fetcher) parsePlayers(server ServerJSON) []model.Player {
 	country, continent, iso := f.geolocate(server["__addr"].(string)) // TODO: redundant: done twice
 
 	if f.isEmpty(server) {
@@ -147,7 +151,7 @@ func (f Fetch) parsePlayers(server ServerJSON) []model.Player {
 }
 
 // geolocate uses GeoIP to get a country origin of the IP
-func (f Fetch) geolocate(ip string) (string, string, string) {
+func (f Fetcher) geolocate(ip string) (string, string, string) {
 	record, err := f.geoip.Country(net.ParseIP(ip))
 	if err != nil {
 		return "ERROR", "ERROR", "ERROR" // TODO: What to do?
@@ -158,7 +162,7 @@ func (f Fetch) geolocate(ip string) (string, string, string) {
 
 // some charaacters are nicknamed differently
 // also capitalize first letter for easy display
-func (f Fetch) translate(name string) string {
+func (f Fetcher) translate(name string) string {
 	switch name {
 	case "":
 		return "<Selecting>"
@@ -175,7 +179,7 @@ func (f Fetch) translate(name string) string {
 	return strings.Title(name)
 }
 
-func (f Fetch) isEmpty(server ServerJSON) bool {
+func (f Fetcher) isEmpty(server ServerJSON) bool {
 	return server["players"] == "return {  }"
 }
 
@@ -188,7 +192,7 @@ var endpoints = []string{
 }
 
 // readServerList reads from all of klei's endpoints
-func (f Fetch) readServerList() (ServerList, error) {
+func (f Fetcher) readServerList() (ServerList, error) {
 	payload := fmt.Sprintf(`{
 		"__token": "%s", 
 		"__gameId": "DST", 
@@ -233,7 +237,7 @@ func (f Fetch) readServerList() (ServerList, error) {
 var regElapsed = regexp.MustCompile(`\d+`)
 
 // parseElapsed converts the day elapsed counter to int
-func (f Fetch) parseElapsed(data string) int {
+func (f Fetcher) parseElapsed(data string) int {
 	str := regElapsed.FindString(data)
 	if str == "" { // TODO: Found anomaly
 		log.Debug("Found server without proper data field")
@@ -257,10 +261,11 @@ var platform = map[float64]string{
 	10: "XBOX LIVE",
 	16: "???",
 	19: "???",
+	32: "???",
 }
 
 // Convert platform number to name
-func (f Fetch) parsePlatform(platformNumber float64) string {
+func (f Fetcher) parsePlatform(platformNumber float64) string {
 	if _, exists := platform[platformNumber]; !exists {
 		log.Panicf("unknown: %f", platformNumber)
 	}
@@ -268,6 +273,6 @@ func (f Fetch) parsePlatform(platformNumber float64) string {
 }
 
 // Cycle returns how often we fetched from klei
-func (f Fetch) Cycle() int {
+func (f Fetcher) Cycle() int {
 	return f.cycle
 }

@@ -6,46 +6,61 @@ import (
 	"time"
 
 	"dontstarve-stats/alert"
+	"dontstarve-stats/cache"
 	"dontstarve-stats/model"
 )
 
-// SeriesRepository documents all required methods to a database
-// necessary to serve series data
-type SeriesRepository interface {
-}
+// snapshots every 15mins * 4 * 24 * 5 = 5 days
+const five_days int = 4 * 24 * 5
 
 // GetSeriesContinents returns how many players over time played distributed by continent
-func (s Service) GetSeriesContinents() []Series {
-	snapshots := s.store.GetSeriesContinents()
-
-	m := make(map[string][]Item)
-	for _, snapshot := range snapshots {
-		m["Asia"] = append(m["Asia"], Item{snapshot.Date, snapshot.Asia})
-		m["Europe"] = append(m["Europe"], Item{snapshot.Date, snapshot.Europe})
-		m["North America"] = append(m["North America"], Item{snapshot.Date, snapshot.NorthAmerica})
-		m["South America"] = append(m["South America"], Item{snapshot.Date, snapshot.SouthAmerica})
-		m["Africa"] = append(m["Africa"], Item{snapshot.Date, snapshot.Africa})
-		m["Oceania"] = append(m["Oceania"], Item{snapshot.Date, snapshot.Oceania})
+func (s Service) GetSeriesContinents() []model.Series {
+	if cache.Exists("series_continents") {
+		return cache.GetSeries("series_continents")
 	}
 
-	return toSeries(m)
+	snapshots := s.store.GetSeriesContinents()
+
+	m := make(map[string][]model.Item)
+	for _, snapshot := range snapshots {
+		m["Asia"] = append(m["Asia"], model.Item{snapshot.Date, snapshot.Asia})
+		m["Europe"] = append(m["Europe"], model.Item{snapshot.Date, snapshot.Europe})
+		m["North America"] = append(m["North America"], model.Item{snapshot.Date, snapshot.NorthAmerica})
+		m["South America"] = append(m["South America"], model.Item{snapshot.Date, snapshot.SouthAmerica})
+		m["Africa"] = append(m["Africa"], model.Item{snapshot.Date, snapshot.Africa})
+		m["Oceania"] = append(m["Oceania"], model.Item{snapshot.Date, snapshot.Oceania})
+	}
+
+	result := toSeries(m)[:min(len(m), five_days)]
+
+	cache.SetItems("series_continents", result)
+
+	return result
 }
 
 // GetSeriesCharacters returns all the characters and their total players over time
-func (s Service) GetSeriesCharacters() []Series {
+func (s Service) GetSeriesCharacters() []model.Series {
+	if cache.Exists("series_characters") {
+		return cache.GetSeries("series_characters")
+	}
+
 	snapshots := s.store.GetSeriesCharacters()
 
-	m := make(map[string][]Item) // character -> [#played at timepoint 0, ... timepoint 1]
+	m := make(map[string][]model.Item) // character -> [#played at timepoint 0, ... timepoint 1]
 	for _, snapshot := range snapshots {
 		for _, character := range snapshot.Characters {
 			if !isVanillaChar(character.Name) {
 				continue
 			}
-			m[character.Name] = append(m[character.Name], Item{snapshot.Date, character.Count})
+			m[character.Name] = append(m[character.Name], model.Item{snapshot.Date, character.Count})
 		}
 	}
 
-	return toSeries(m)
+	result := toSeries(m)[:min(len(m), five_days)]
+
+	cache.SetItems("series_characters", result)
+
+	return result
 }
 
 // ContinentSnapshot creates an entry in a timeseries table of
@@ -110,7 +125,11 @@ func (s Service) PercentageSnapshot() {
 }
 
 //
-func (s Service) GetCountryCharacters(name string) []IsoItem {
+func (s Service) GetCountryCharacters(name string) []model.IsoItem {
+	if cache.Exists("country_characters") {
+		return cache.GetIso("country_characters")
+	}
+
 	players := s.store.GetAllPlayers()
 
 	count := make(map[string]int)  // country -> count of character (`name`) played in this country
@@ -141,10 +160,10 @@ func (s Service) GetCountryCharacters(name string) []IsoItem {
 		percentage[country] = round(f * 100)
 	}
 
-	result := make([]IsoItem, 0)
+	result := make([]model.IsoItem, 0)
 	for country, value := range percentage {
 		if total[country] >= 30 {
-			result = append(result, IsoItem{country, iso[country], value})
+			result = append(result, model.IsoItem{country, iso[country], value})
 		}
 	}
 
@@ -152,16 +171,24 @@ func (s Service) GetCountryCharacters(name string) []IsoItem {
 		return result[i][2].(float64) > result[j][2].(float64)
 	})
 
-	return result[:min(5, len(result))]
+	final := result[:min(5, len(result))]
+
+	cache.SetItems("country_characters", final)
+
+	return final
 }
 
-func (s Service) GetCountryRankings(name string) []Series {
+func (s Service) GetCountryRankings(name string) []model.Series {
+	if cache.Exists("country_rankings") {
+		return cache.GetSeries("country_rankings")
+	}
+
 	ranking := s.store.GetPercentageSnapshot(name)
 
 	// TODO: Handle empty cases
-	result := make([]Series, 0)
+	result := make([]model.Series, 0)
 	for _, rank := range ranking {
-		data := []Item{
+		data := []model.Item{
 			{rank.First, rank.FirstPercent},
 			{rank.Second, rank.SecondPercent},
 			{rank.Third, rank.ThirdPercent},
@@ -169,11 +196,13 @@ func (s Service) GetCountryRankings(name string) []Series {
 			{rank.Fifth, rank.FifthPercent},
 		}
 
-		result = append(result, Series{
+		result = append(result, model.Series{
 			Name: rank.Date.Format("Jan 2 15:04"),
 			Data: data,
 		})
 	}
+
+	cache.SetItems("country_rankings", result)
 
 	return result
 }
