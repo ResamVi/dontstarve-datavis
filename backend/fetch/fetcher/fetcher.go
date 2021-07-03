@@ -134,6 +134,7 @@ func (f Fetcher) parsePlayers(server ServerJSON) []model.Player {
 	err := json.Unmarshal(b, &ps)
 	if err != nil {
 		if e, ok := err.(*json.SyntaxError); ok {
+			alert.Msg(e.Error())
 			alert.Msg(fmt.Sprintf("unmarshal error at byte offset %d", e.Offset))
 		}
 
