@@ -123,6 +123,7 @@ func (f Fetcher) parsePlayers(server ServerJSON) []model.Player {
 		"\x01", "",
 		"\x14", "",
 		"\x0e", "",
+		"\x10", "",
 		"ó", "o",
 	)
 	s := r.Replace(server["players"].(string))
@@ -134,7 +135,7 @@ func (f Fetcher) parsePlayers(server ServerJSON) []model.Player {
 	err := json.Unmarshal(b, &ps)
 	if err != nil {
 		if e, ok := err.(*json.SyntaxError); ok {
-			alert.Msg(e.Error())
+			alert.Msg(e.Error() + " " + string(b))
 			alert.Msg(fmt.Sprintf("unmarshal error at byte offset %d", e.Offset))
 		}
 

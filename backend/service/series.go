@@ -125,9 +125,9 @@ func (s Service) PercentageSnapshot() {
 }
 
 //
-func (s Service) GetCountryCharacters(name string) []model.IsoItem {
-	if cache.Exists("country_characters") {
-		return cache.GetIso("country_characters")
+func (s Service) GetCountryCharacters(character string) []model.IsoItem {
+	if cache.Exists(character) {
+		return cache.GetIso(character)
 	}
 
 	players := s.store.GetAllPlayers()
@@ -143,7 +143,7 @@ func (s Service) GetCountryCharacters(name string) []model.IsoItem {
 	}
 
 	for _, player := range players {
-		if player.Character == name {
+		if player.Character == character {
 			count[player.Country]++
 		}
 
@@ -173,7 +173,7 @@ func (s Service) GetCountryCharacters(name string) []model.IsoItem {
 
 	final := result[:min(5, len(result))]
 
-	cache.SetItems("country_characters", final)
+	cache.SetItems(character, final)
 
 	return final
 }

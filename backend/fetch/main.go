@@ -48,6 +48,12 @@ func main() {
 	for {
 		start := time.Now()
 		servers := fetch.Servers()
+
+		if len(servers) == 0 {
+			log.Infof("No servers found. Trying again.")
+			continue
+		}
+
 		log.Infof("%d servers fetched in %.2fs", len(servers), time.Since(start).Seconds())
 
 		svc.TrackPlaytime(servers, previousCycle)

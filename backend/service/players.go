@@ -41,7 +41,9 @@ func (s Service) CountCharacters(includeModded bool) []model.Item {
 	}
 	result := toItems(m)
 
-	cache.SetItems("character_count", result)
+	if !includeModded {
+		cache.SetItems("character_count", result)
+	}
 
 	return result
 }
@@ -73,8 +75,8 @@ func (s Service) CountPlayerOrigin(includeAll bool) []model.Item {
 
 // GetCountryPreference returns how often each character is picked for a specific country
 func (s Service) GetCountryPreference(country string) []model.Item {
-	if cache.Exists("country_preference") {
-		return cache.GetItems("country_preference")
+	if cache.Exists(country) {
+		return cache.GetItems(country)
 	}
 
 	players := s.store.GetAllPlayers()
@@ -94,7 +96,7 @@ func (s Service) GetCountryPreference(country string) []model.Item {
 
 	result := toItems(m)
 
-	cache.SetItems("country_preference", result)
+	cache.SetItems(country, result)
 
 	return result
 }
@@ -161,7 +163,7 @@ func (s Service) TrackPlaytime(servers []model.Server, lastCheck time.Time) {
 	}
 }
 
-// GetPlayTime returns how much he plays each character
+// GetPlayTime returns how much a players plays each character
 func (s Service) GetPlayTime(name string) []model.Item {
 
 	stats := s.store.GetPlayerStat(name)

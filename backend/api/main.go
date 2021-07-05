@@ -95,8 +95,8 @@ func main() {
 	})
 
 	r.GET("/characters/percentage/:character", func(c *gin.Context) {
-		name := c.Param("character")
-		c.JSON(200, svc.GetCountryCharacters(name))
+		character := c.Param("character")
+		c.JSON(200, svc.GetCountryCharacters(character))
 	})
 
 	r.GET("/count/intent", func(c *gin.Context) {
