@@ -6,7 +6,7 @@ services:
     build: "web/."
     restart: always
     ports:
-      - "85:80"
+      - "127.0.0.1:85:80"
     #networks:
     #  - main
 
@@ -32,7 +32,7 @@ services:
       dockerfile: "api/Dockerfile"
     restart: always
     ports: 
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment: 
       - USER=root
       - PASSWORD=password
@@ -53,7 +53,7 @@ services:
     volumes:
       - dst-data:/var/lib/postgresql/data
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     #networks:
     #  - main
 
@@ -61,9 +61,10 @@ services:
   redis:
     container_name: "dstcache"
     image: "redis:latest"
+    restart: always
     command: redis-server --requirepass redispassword
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     #networks:
     # - main
 

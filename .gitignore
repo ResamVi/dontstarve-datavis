@@ -6,3 +6,4 @@ web/node_modules
 api/target/
 node_modules
 .env
+.idea

@@ -152,6 +152,8 @@ func (s Service) TrackPlaytime(servers []model.Server, lastCheck time.Time) {
 					stat.Willow += time.Since(lastCheck).Seconds()
 				case "Warly":
 					stat.Warly += time.Since(lastCheck).Seconds()
+				case "Wanda":
+					stat.Wanda += time.Since(lastCheck).Seconds()
 				default:
 					return
 				}
@@ -187,6 +189,7 @@ func (s Service) GetPlayTime(name string) []model.Item {
 		{"Wes", round(stats.Wes / toHours)},
 		{"Willow", round(stats.Willow / toHours)},
 		{"Warly", round(stats.Warly / toHours)},
+		{"Wanda", round(stats.Wanda / toHours)},
 	})
 }
 
@@ -224,6 +227,8 @@ func isVanillaChar(name string) bool {
 	case "Wes":
 		fallthrough
 	case "Willow":
+		fallthrough
+	case "Wanda":
 		fallthrough
 	case "Warly":
 		return true

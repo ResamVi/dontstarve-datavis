@@ -20,6 +20,11 @@ func init() {
 		Password: "redispassword", // no password set
 		DB:       0,               // use default DB
 	})
+
+	_, err := rdb.Ping(context.Background()).Result()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Set(key string, value interface{}) {

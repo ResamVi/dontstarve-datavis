@@ -10,8 +10,9 @@ import (
 	"dontstarve-stats/model"
 )
 
-// snapshots every 15mins * 4 * 24 * 5 = 5 days
-const five_days int = 4 * 24 * 5
+const neg_five_days = time.Duration(-5*24) * time.Hour
+
+const neg_five_minutes = time.Duration(-5) * time.Minute
 
 // GetSeriesContinents returns how many players over time played distributed by continent
 func (s Service) GetSeriesContinents() []model.Series {
@@ -23,6 +24,10 @@ func (s Service) GetSeriesContinents() []model.Series {
 
 	m := make(map[string][]model.Item)
 	for _, snapshot := range snapshots {
+		if !snapshot.Date.After(time.Now().Add(neg_five_days)) {
+			continue
+		}
+
 		m["Asia"] = append(m["Asia"], model.Item{snapshot.Date, snapshot.Asia})
 		m["Europe"] = append(m["Europe"], model.Item{snapshot.Date, snapshot.Europe})
 		m["North America"] = append(m["North America"], model.Item{snapshot.Date, snapshot.NorthAmerica})
@@ -31,7 +36,7 @@ func (s Service) GetSeriesContinents() []model.Series {
 		m["Oceania"] = append(m["Oceania"], model.Item{snapshot.Date, snapshot.Oceania})
 	}
 
-	result := toSeries(m)[:min(len(m), five_days)]
+	result := toSeries(m)
 
 	cache.SetItems("series_continents", result)
 
@@ -48,6 +53,10 @@ func (s Service) GetSeriesCharacters() []model.Series {
 
 	m := make(map[string][]model.Item) // character -> [#played at timepoint 0, ... timepoint 1]
 	for _, snapshot := range snapshots {
+		if !snapshot.Date.After(time.Now().Add(neg_five_days)) {
+			continue
+		}
+
 		for _, character := range snapshot.Characters {
 			if !isVanillaChar(character.Name) {
 				continue
@@ -56,7 +65,7 @@ func (s Service) GetSeriesCharacters() []model.Series {
 		}
 	}
 
-	result := toSeries(m)[:min(len(m), five_days)]
+	result := toSeries(m)
 
 	cache.SetItems("series_characters", result)
 
@@ -96,7 +105,7 @@ func (s Service) PercentageSnapshot() {
 		"Woodie", "Wes", "Maxwell",
 		"Wigfrid", "Webber", "Warly",
 		"Wormwood", "Winona", "Wortox",
-		"Wurt", "Walter",
+		"Wurt", "Walter", "Wanda",
 	}
 
 	for _, character := range CHARACTERS {

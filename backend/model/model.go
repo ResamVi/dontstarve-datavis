@@ -100,6 +100,7 @@ type PlayerStat struct {
 	Wes          float64
 	Willow       float64
 	Warly        float64
+	Wanda        float64
 }
 
 // Keeps a record how long we tracked

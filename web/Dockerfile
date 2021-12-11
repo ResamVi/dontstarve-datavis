@@ -1,7 +1,6 @@
-FROM node:latest as build-stage
+FROM node:14 as build-stage
 WORKDIR /app
 COPY package*.json ./
-ENV VUE_APP_SERVER_ENDPOINT="http://localhost:3000"
 RUN npm install
 COPY . .
 RUN npm run build

@@ -62,6 +62,7 @@ func New(host, user, password, dbname, dbport string) Store {
 		}
 
 		log.Infof("Retrying database connection in 5s (%d/5)", i+1)
+		log.Infoln(err)
 		time.Sleep(5 * time.Second)
 	}
 

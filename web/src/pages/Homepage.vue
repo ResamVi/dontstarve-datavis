@@ -83,6 +83,7 @@
             <flag-row character="Wortox"         :data=wortox />
             <flag-row character="Wurt"           :data=wurt />
             <flag-row character="Walter"         :data=walter />
+            <flag-row character="Wanda"          :data=wanda />
         </div>
 
         <h3 class="boxed">Character Preference over time</h3>
@@ -146,7 +147,7 @@ export default {
     },
     methods: {
         get(endpoint) {
-            return axios.get(process.env.VUE_APP_SERVER_ENDPOINT + endpoint);
+            return axios.get("https://dststats.resamvi.io" + endpoint);
         },
         
         searchCountry(input) {
@@ -160,7 +161,7 @@ export default {
         searchCharacter(input) {
             if (input.length < 1) { return [] }
             
-            const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX-78", "Wickerbottom", "Woodie", "Wes", "Maxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter"];
+            const characters = ["Wilson", "Willow", "Wolfgang", "Wendy", "WX-78", "Wickerbottom", "Woodie", "Wes", "Maxwell", "Wigfrid", "Webber", "Warly", "Wormwood", "Winona", "Wortox", "Wurt", "Walter", "Wanda"];
 
             return characters.filter(char => {
                 return char.toLowerCase().startsWith(input.toLowerCase())
@@ -232,6 +233,7 @@ export default {
             wortox: [],
             wurt: [],
             walter: [],
+            wanda: [],
 
             seriesCharacter: [],
             seriesPreferences: [],
@@ -270,7 +272,7 @@ export default {
         this.get("/characters/percentage/Wortox")       .then(resp => (this.wortox = resp.data));
         this.get("/characters/percentage/Wurt")         .then(resp => (this.wurt = resp.data));
         this.get("/characters/percentage/Walter")       .then(resp => (this.walter = resp.data));
-        
+        this.get("/characters/percentage/Wanda")        .then(resp => (this.wanda = resp.data));
         this.get("/count/platforms")            .then(resp => (this.platformCount = resp.data));
         this.get("/count/intent")               .then(resp => (this.intentCount = resp.data));
         this.get("/count/modded")               .then(resp => (this.moddedCount = resp.data));
