@@ -6,7 +6,7 @@ services:
     build: "web/."
     restart: always
     ports:
-      - "127.0.0.1:85:80"
+      - "127.0.0.1:83:80"
     #networks:
     #  - main
 
@@ -32,7 +32,7 @@ services:
       dockerfile: "api/Dockerfile"
     restart: always
     ports: 
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:8003:8003"
     environment: 
       - USER=root
       - PASSWORD=password

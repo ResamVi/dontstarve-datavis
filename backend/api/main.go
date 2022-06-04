@@ -129,7 +129,7 @@ func main() {
 		c.JSON(200, svc.Started())
 	})
 
-	r.Run("0.0.0.0:3000")
+	r.Run("0.0.0.0:8003")
 }
 
 // isProd assumes we run in a docker environment
