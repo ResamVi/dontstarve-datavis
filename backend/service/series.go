@@ -171,7 +171,7 @@ func (s Service) GetCountryCharacters(character string) []model.IsoItem {
 
 	result := make([]model.IsoItem, 0)
 	for country, value := range percentage {
-		if total[country] >= 30 {
+		if total[country] >= 10 { // minimum required players
 			result = append(result, model.IsoItem{country, iso[country], value})
 		}
 	}
