@@ -18,8 +18,8 @@ services:
       - PASSWORD=password
       - DBNAME=dststats
       - DBPORT=5432
-      - TOKEN=<YOUR TOKEN HERE>
-    build: 
+      - TOKEN=${DST}
+    build:
       context: backend
       dockerfile: "fetch/Dockerfile"
     #networks:
