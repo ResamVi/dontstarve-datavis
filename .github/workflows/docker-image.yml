@@ -19,6 +19,7 @@ jobs:
         port: ${{ secrets.PORT }}
         envs: DST
         script: |
-          git clone git@github.com:ResamVi/dontstarve-datavis.git repo
-          docker-compose -p dontstarve -f repo/docker-compose.yml up --detach --build --force-recreate
-          rm -rf repo
+          echo $DST
+#          git clone git@github.com:ResamVi/dontstarve-datavis.git repo
+#          docker-compose -p dontstarve -f repo/docker-compose.yml up --detach --build --force-recreate
+#          rm -rf repo
