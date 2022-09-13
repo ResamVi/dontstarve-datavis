@@ -2,10 +2,11 @@ package cache
 
 import (
 	"context"
-	"dontstarve-stats/alert"
-	"dontstarve-stats/model"
 	"encoding/json"
 	"time"
+
+	"dontstarve-stats/alert"
+	"dontstarve-stats/model"
 
 	"github.com/go-redis/redis/v8"
 )

@@ -13,12 +13,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oschwald/geoip2-golang"
 	log "github.com/sirupsen/logrus"
 
 	"dontstarve-stats/alert"
 	"dontstarve-stats/model"
-
-	"github.com/oschwald/geoip2-golang"
 )
 
 // Fetcher is the main orchestrator to get the data
@@ -186,11 +185,13 @@ func (f Fetcher) isEmpty(server ServerJSON) bool {
 }
 
 // Klei's endpoint URLs to get the data
+// Thanks to Crestwave for noting what changed.
+// https://forums.kleientertainment.com/forums/topic/138537-march-quality-of-life-update-now-live/?do=findComment&comment=1551936
 var endpoints = []string{
-	"https://lobby-us.kleientertainment.com/lobby/read",
-	"https://lobby-eu.kleientertainment.com/lobby/read",
-	"https://lobby-china.kleientertainment.com/lobby/read",
-	"https://lobby-sing.kleientertainment.com/lobby/read",
+	"https://lobby-us.klei.com/lobby/read",
+	"https://lobby-eu.klei.com/lobby/read",
+	"https://lobby.klei.com/lobby/read", // Is that china? IDK
+	"https://lobby-sing.klei.com/lobby/read",
 }
 
 // readServerList reads from all of klei's endpoints

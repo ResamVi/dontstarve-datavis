@@ -23,7 +23,7 @@ func main() {
 			"localhost",
 			"root",
 			"password",
-			"mydatabase",
+			"dststats",
 			"5432",
 		)
 
