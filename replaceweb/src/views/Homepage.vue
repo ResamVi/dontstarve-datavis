@@ -137,13 +137,13 @@
 
 <script>
 import axios from 'axios';
-import FlagRow from '../components/FlagRow.vue';
-import FlagColumn from '../components/FlagColumn.vue';
+/* import FlagRow from '../components/FlagRow.vue'; */
+/* import FlagColumn from '../components/FlagColumn.vue'; */
 
 export default {
     components: {
-        FlagRow,
-        FlagColumn
+        /* FlagRow, */
+        /* FlagColumn */
     },
     methods: {
         get(endpoint) {

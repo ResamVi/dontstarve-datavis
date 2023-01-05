@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-        <!--<img :src="require(`../assets/${this.character}.png`)" class="portrait">-->
+        <img :src="require(`../assets/${this.character}.png`)" class="portrait">
         <div class="container" v-for="i in [0, 1, 2, 3, 4]" :key="i">
           <div v-if="data[i] !== undefined">
             <h5>{{ data[i][0] }}</h5>
