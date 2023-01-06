@@ -20,6 +20,7 @@
             </div>
         </div>
 
+
         <h3 class="boxed">Count of Characters being played</h3>
         <span style="float:right;">
             <input type="checkbox" v-model="includeModdedChars" @click="toggleModdedChar">
@@ -42,14 +43,26 @@
         </h3>
         <bar-chart :data="playerCountry"></bar-chart>
 
+
         <h3 class="boxed">Map of Players by Country</h3>
         <geo-chart :library="{backgroundColor: '#EADBC4', datalessRegionColor: '#ded0ba'}" :data="allPlayerCountry"></geo-chart>
 
         <h3 class="boxed">Character Choice by Country</h3>
+            <autocomplete
+                :search="search"
+                placeholder="Search for a country"
+                aria-label="Search for a country"
+            ></autocomplete>
+
         <div class="center">
+            <!--
             <autocomplete id="country-field" :search="searchCountry" placeholder="Enter Country here (Currently: China)" @submit="submitCountry"></autocomplete>
+            -->
         </div>
         <bar-chart :data="charactersCountry"></bar-chart>
+
+
+                <!--
 
         <h3 class="boxed">Activity over time by Continent</h3>
         <line-chart :data="seriesContinents" />
@@ -63,6 +76,7 @@
             </a>
         </h3>
         <line-chart :data="seriesCharacter" />
+
 
         <h3 class="boxed">Highest Character Preferences by Country</h3>
         <div>
@@ -131,7 +145,7 @@
                 <bar-chart :data="seasonCount"></bar-chart>
             </div>
         </div>
-
+            -->
     </main>
 </template>
 
@@ -146,6 +160,14 @@ export default {
         /* FlagColumn */
     },
     methods: {
+        search(input) {
+            if (input.length < 1) { return [] }
+            return countries.filter(country => {
+                return country.toLowerCase()
+                    .startsWith(input.toLowerCase())
+            })
+        },
+
         get(endpoint) {
             return axios.get("http://localhost:8003" + endpoint);
         },
