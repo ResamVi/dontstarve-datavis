@@ -158,7 +158,7 @@ export default {
     },
     methods: {
         get(endpoint) {
-            return axios.get("http://localhost:8003" + endpoint);
+            return axios.get("https://dststats.resamvi.io" + endpoint);
         },
         
         submitCountry(input) {
