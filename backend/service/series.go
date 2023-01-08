@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"dontstarve-stats/alert"
-	"dontstarve-stats/cache"
 	"dontstarve-stats/model"
 )
 
@@ -16,10 +15,6 @@ const neg_five_minutes = time.Duration(-5) * time.Minute
 
 // GetSeriesContinents returns how many players over time played distributed by continent
 func (s Service) GetSeriesContinents() []model.Series {
-	if cache.Exists("series_continents") {
-		return cache.GetSeries("series_continents")
-	}
-
 	snapshots := s.store.GetSeriesContinents()
 
 	m := make(map[string][]model.Item)
@@ -38,17 +33,11 @@ func (s Service) GetSeriesContinents() []model.Series {
 
 	result := toSeries(m)
 
-	cache.SetItems("series_continents", result)
-
 	return result
 }
 
 // GetSeriesCharacters returns all the characters and their total players over time
 func (s Service) GetSeriesCharacters() []model.Series {
-	if cache.Exists("series_characters") {
-		return cache.GetSeries("series_characters")
-	}
-
 	snapshots := s.store.GetSeriesCharacters()
 
 	m := make(map[string][]model.Item) // character -> [#played at timepoint 0, ... timepoint 1]
@@ -66,8 +55,6 @@ func (s Service) GetSeriesCharacters() []model.Series {
 	}
 
 	result := toSeries(m)
-
-	cache.SetItems("series_characters", result)
 
 	return result
 }
@@ -135,10 +122,6 @@ func (s Service) PercentageSnapshot() {
 
 //
 func (s Service) GetCountryCharacters(character string) []model.IsoItem {
-	if cache.Exists(character) {
-		return cache.GetIso(character)
-	}
-
 	players := s.store.GetAllPlayers()
 
 	count := make(map[string]int)  // country -> count of character (`name`) played in this country
@@ -182,16 +165,10 @@ func (s Service) GetCountryCharacters(character string) []model.IsoItem {
 
 	final := result[:min(5, len(result))]
 
-	cache.SetItems(character, final)
-
 	return final
 }
 
 func (s Service) GetCountryRankings(name string) []model.Series {
-	if cache.Exists("country_rankings") {
-		return cache.GetSeries("country_rankings")
-	}
-
 	ranking := s.store.GetPercentageSnapshot(name)
 
 	// TODO: Handle empty cases
@@ -211,8 +188,6 @@ func (s Service) GetCountryRankings(name string) []model.Series {
 		})
 	}
 	final := result[:min(12, len(result))]
-
-	cache.SetItems("country_rankings", final)
 
 	return final
 }

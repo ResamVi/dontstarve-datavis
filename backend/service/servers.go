@@ -4,7 +4,6 @@ import (
 	"math"
 	"time"
 
-	"dontstarve-stats/cache"
 	"dontstarve-stats/model"
 )
 
@@ -20,19 +19,7 @@ func (s Service) LastUpdate() float64 {
 
 // CountServers returns the total servers that are listed
 func (s Service) CountServers() int {
-	if cache.Exists("server_count") {
-		val, err := cache.Get("server_count").Int()
-		if err != nil {
-			panic(err)
-		}
-
-		return val
-	}
-
 	servers := s.store.GetAllServers()
-
-	cache.Set("server_count", len(servers))
-
 	return len(servers)
 }
 
@@ -45,10 +32,6 @@ func (s Service) ServerSnapshot(servers []model.Server) {
 
 // CountCountry returns how many servers belong to the country (the top 20 highest only)
 func (s Service) CountCountry() []model.Item {
-	if cache.Exists("count_country") {
-		return cache.GetItems("count_country")
-	}
-
 	servers := s.store.GetAllServers()
 
 	m := make(map[string]int)
@@ -57,18 +40,12 @@ func (s Service) CountCountry() []model.Item {
 	}
 	result := toItems(m)[:min(len(m), 20)]
 
-	cache.SetItems("count_country", result)
-
 	return result
 }
 
 // Return the distribution of cooperative/social/madness/competitive servers
 // There seems to others (survival, endless, wilderness) on this so only return top 4
 func (s Service) CountIntent() []model.Item {
-	if cache.Exists("count_intent") {
-		return cache.GetItems("count_intent")
-	}
-
 	servers := s.store.GetAllServers()
 
 	m := make(map[string]int)
@@ -78,17 +55,11 @@ func (s Service) CountIntent() []model.Item {
 
 	result := toItems(m)[:min(len(m), 4)]
 
-	cache.SetItems("count_intent", result)
-
 	return result
 }
 
 //
 func (s Service) CountPlatform() []model.Item {
-	if cache.Exists("count_platform") {
-		return cache.GetItems("count_platform")
-	}
-
 	servers := s.store.GetAllServers()
 
 	m := make(map[string]int)
@@ -98,16 +69,10 @@ func (s Service) CountPlatform() []model.Item {
 
 	result := toItems(m)
 
-	cache.SetItems("count_platform", result)
-
 	return result
 }
 
 func (s Service) CountSeason() []model.Item {
-	if cache.Exists("count_season") {
-		return cache.GetItems("count_season")
-	}
-
 	servers := s.store.GetAllServers()
 
 	m := make(map[string]int)
@@ -117,16 +82,10 @@ func (s Service) CountSeason() []model.Item {
 
 	result := toItems(m)[:min(len(m), 4)]
 
-	cache.SetItems("count_season", result)
-
 	return result
 }
 
 func (s Service) CountModded() []model.Item {
-	if cache.Exists("count_modded") {
-		return cache.GetItems("count_modded")
-	}
-
 	servers := s.store.GetAllServers()
 
 	m := make(map[string]int)
@@ -139,8 +98,6 @@ func (s Service) CountModded() []model.Item {
 	}
 
 	result := toItems(m)
-
-	cache.SetItems("count_modded", result)
 
 	return result
 }

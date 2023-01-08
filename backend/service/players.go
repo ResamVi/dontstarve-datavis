@@ -3,34 +3,17 @@ package service
 import (
 	"time"
 
-	"dontstarve-stats/cache"
 	"dontstarve-stats/model"
 )
 
 // CountPlayers returns the total players online
 func (s Service) CountPlayers() int {
-	if cache.Exists("player_count") {
-		val, err := cache.Get("player_count").Int()
-		if err != nil {
-			panic(err)
-		}
-
-		return val
-	}
-
 	players := s.store.GetAllPlayers()
-
-	cache.Set("player_count", len(players))
-
 	return len(players)
 }
 
 // CountCharacters returns how often each character is picked
 func (s Service) CountCharacters(includeModded bool) []model.Item {
-	if cache.Exists("character_count") && !includeModded {
-		return cache.GetItems("character_count")
-	}
-
 	players := s.store.GetAllPlayers()
 
 	m := make(map[string]int)
@@ -40,21 +23,12 @@ func (s Service) CountCharacters(includeModded bool) []model.Item {
 		}
 	}
 	result := toItems(m)
-
-	if !includeModded {
-		cache.SetItems("character_count", result)
-	}
-
 	return result
 }
 
 // CountPlayerOrigin returns the countries where the majority of players come from (the top 20 highest countries only)
 // Note: Player inherit their origin from the server's origin (i.e. its IP), so German players on french servers are French
 func (s Service) CountPlayerOrigin(includeAll bool) []model.Item {
-	if cache.Exists("player_origin") && !includeAll {
-		return cache.GetItems("player_origin")
-	}
-
 	players := s.store.GetAllPlayers()
 
 	m := make(map[string]int)
@@ -67,18 +41,11 @@ func (s Service) CountPlayerOrigin(includeAll bool) []model.Item {
 	}
 
 	result := toItems(m)[:min(20, len(m))]
-
-	cache.SetItems("player_origin", result)
-
 	return result
 }
 
 // GetCountryPreference returns how often each character is picked for a specific country
 func (s Service) GetCountryPreference(country string) []model.Item {
-	if cache.Exists(country) {
-		return cache.GetItems(country)
-	}
-
 	players := s.store.GetAllPlayers()
 
 	m := make(map[string]int)
@@ -95,8 +62,6 @@ func (s Service) GetCountryPreference(country string) []model.Item {
 	}
 
 	result := toItems(m)
-
-	cache.SetItems(country, result)
 
 	return result
 }
