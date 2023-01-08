@@ -20,7 +20,7 @@ export default {
 
     methods: {
         flag(iso) {
-            return `flag-icon flag-icon-${iso.toLowerCase()} size`;
+            return `fi fi-${iso.toLowerCase()} size`;
         }
     },
 
