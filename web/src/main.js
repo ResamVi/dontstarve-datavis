@@ -1,32 +1,25 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-import Chartkick from 'vue-chartkick';
-import Chart from 'chart.js';
-import Autocomplete from '@trevoreyre/autocomplete-vue';
-import Moment from 'vue-moment'
+import { createApp } from 'vue';
+import VueChartkick from 'vue-chartkick';
+// import Moment from 'vue-moment';
+import Autocomplete from 'vue3-autocomplete';
+import 'chartkick/chart.js';
 import '@trevoreyre/autocomplete-vue/dist/style.css';
-import 'flag-icon-css/css/flag-icon.css';
+// import 'flag-icons/css/flag-icons.min.css';
 
-import App from './App.vue';
-import Homepage from './pages/Homepage';
-import About from './pages/About';
-import './global.css';
+import '/node_modules/flag-icons/css/flag-icons.min.css';
 
-Vue.use(Chartkick.use(Chart));
-Vue.use(VueRouter);
-Vue.use(Autocomplete);
-Vue.use(Moment);
 
-const router = new VueRouter({
-    routes: [
-        { path: '/', component: Homepage },
-        { path: '/about', component: About }
-    ]
-});
+import App from './App.vue'
+import router from './router'
+import './assets/main.css'
 
-Vue.config.productionTip = false;
+const app = createApp(App)
 
-new Vue({
-    router,
-    render: h => h(App)
-}).$mount('#app');
+app.component('Autocomplete', Autocomplete);
+
+app.use(router);
+app.use(VueChartkick);
+app.use(Autocomplete);
+// app.use(Moment);
+
+app.mount('#app')

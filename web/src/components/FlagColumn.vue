@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <img :src="require(`../assets/${this.character}.png`)" class="portrait">
+        <img :src="imageSrc" class="portrait">
         <div class="column" v-for="(entry, i) in data" :key="i">
             <span class="date">{{ entry["name"] }}</span>
             <span :class="flag(entry['data'][0][0])"></span> 
@@ -21,7 +21,13 @@ export default {
 
     methods: {
         flag(iso) {
-            return `flag-icon flag-icon-${iso.toLowerCase()} margin`;
+            return `fi fi-${iso.toLowerCase()} margin`;
+        }
+    },
+
+    computed: {
+        imageSrc() {
+            return new URL(`../assets/${this.character}.png`, import.meta.url).href;
         }
     }
 }
@@ -35,8 +41,8 @@ export default {
 }
 .container {
     display: grid;
-    grid-template-columns: 7vw repeat(500, 60px);
-    overflow-x: scroll;
+    grid-template-columns: 7vw repeat(12, 60px);
+    margin-top: 10px;
     padding-bottom: 5px;
 }
 

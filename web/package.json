@@ -1,51 +1,26 @@
 {
-    "name": "dontstarvetogether-data-viz",
-    "version": "0.1.0",
-    "private": true,
-    "scripts": {
-        "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build",
-        "lint": "vue-cli-service lint"
-    },
-    "dependencies": {
-        "@trevoreyre/autocomplete-vue": "^2.2.0",
-        "axios": "^0.19.2",
-        "chart.js": "^2.9.3",
-        "core-js": "^3.6.4",
-        "flag-icon-css": "^3.5.0",
-        "sass": "^1.26.3",
-        "sass-loader": "^8.0.2",
-        "vue": "^2.6.11",
-        "vue-chartkick": "^0.6.1",
-        "vue-moment": "^4.1.0",
-        "vue-router": "^3.4.3"
-    },
-    "devDependencies": {
-        "@vue/cli-plugin-babel": "~4.3.0",
-        "@vue/cli-plugin-eslint": "~4.3.0",
-        "@vue/cli-service": "~4.3.0",
-        "babel-eslint": "^10.1.0",
-        "eslint": "^6.7.2",
-        "eslint-plugin-vue": "^6.2.2",
-        "vue-template-compiler": "^2.6.11"
-    },
-    "eslintConfig": {
-        "root": true,
-        "env": {
-            "node": true
-        },
-        "extends": [
-            "plugin:vue/essential",
-            "eslint:recommended"
-        ],
-        "parserOptions": {
-            "parser": "babel-eslint"
-        },
-        "rules": {}
-    },
-    "browserslist": [
-        "> 1%",
-        "last 2 versions",
-        "not dead"
-    ]
+  "name": "replaceweb",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tarekraafat/autocomplete.js": "^10.2.7",
+    "@trevoreyre/autocomplete-vue": "^2.3.0",
+    "axios": "^1.2.2",
+    "chart.js": "^4.1.2",
+    "flag-icons": "^6.6.6",
+    "vue": "^3.2.45",
+    "vue-chartkick": "^1.1.0",
+    "vue-moment": "^4.1.0",
+    "vue-router": "^4.1.6",
+    "vue3-autocomplete": "^1.0.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.0.0",
+    "vite": "^4.0.0"
+  }
 }

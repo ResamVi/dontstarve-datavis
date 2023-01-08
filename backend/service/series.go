@@ -210,10 +210,11 @@ func (s Service) GetCountryRankings(name string) []model.Series {
 			Data: data,
 		})
 	}
+	final := result[:min(12, len(result))]
 
-	cache.SetItems("country_rankings", result)
+	cache.SetItems("country_rankings", final)
 
-	return result
+	return final
 }
 
 func round(f float64) float64 {
