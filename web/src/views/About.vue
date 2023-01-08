@@ -13,7 +13,7 @@
                     The project is a side-gig I did for fun in August 2020 and is currently in maintenance mode.
                 </p>
                 <p>
-                    You can write me a <a href="mailto:julien.midedji@gmail.com">mail</a> if you need something 
+                    You can write me an <a href="mailto:julien.midedji@gmail.com">E-mail</a> if you need something 
                 </p>
                 <p>
                     Sincerely, ResamVi
@@ -54,12 +54,13 @@ main {
 }
 
 @media only screen and (min-width: 1000px) {
-  #logo-short {
-    width: 380px !important;
-    height: 238px !important;
-  }
-  main {
-      margin: 0 25% !important;
-  }
+    #logo-short {
+        width: 25% !important;
+        height: 25% !important;
+        padding: 5%;
+    }
+    main {
+        margin: 0 25% !important;
+    }
 }
 </style>
