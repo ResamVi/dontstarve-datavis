@@ -1,8 +1,6 @@
 package klei
 
 import (
-	"fmt"
-
 	"github.com/ResamVi/dontstarve-datavis/alert"
 )
 
@@ -32,7 +30,6 @@ var platforms = []string{
 
 // ParsePlatform convert platform number to its name.
 func ParsePlatform(platformNumber int) string {
-	fmt.Println(platformNumber)
 	if _, exists := platformID[platformNumber]; !exists {
 		alert.Stringf("unknown: %v", platformNumber)
 	}
