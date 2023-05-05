@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"dontstarve-stats/alert"
-	"dontstarve-stats/model"
+	"github.com/ResamVi/dontstarve-datavis/alert"
+	"github.com/ResamVi/dontstarve-datavis/model"
 )
 
 const neg_five_days = time.Duration(-5*24) * time.Hour
@@ -99,7 +99,7 @@ func (s Service) PercentageSnapshot() {
 		ranking := s.GetCountryCharacters(character)
 
 		if len(ranking) < 5 {
-			alert.Msg("PercentageSnapshot() unsuccesful: too few in ranking")
+			alert.String("PercentageSnapshot() unsuccesful: too few in ranking")
 			return
 		}
 
@@ -120,7 +120,6 @@ func (s Service) PercentageSnapshot() {
 	}
 }
 
-//
 func (s Service) GetCountryCharacters(character string) []model.IsoItem {
 	players := s.store.GetAllPlayers()
 

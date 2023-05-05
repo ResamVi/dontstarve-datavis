@@ -1,12 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
-	"dontstarve-stats/alert"
-	"dontstarve-stats/service"
-	"dontstarve-stats/storage"
+	"github.com/ResamVi/dontstarve-datavis/alert"
+	"github.com/ResamVi/dontstarve-datavis/service"
+	"github.com/ResamVi/dontstarve-datavis/storage"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,29 +15,22 @@ import (
 
 // go get -u github.com/gin-gonic/gin
 func main() {
-	defer alert.Msg("Service 'api' has stopped running")
+	defer alert.String("Service 'api' has stopped running")
 
-	var store storage.Store
-	if !isProd() {
-		store = storage.New(
-			"localhost",
-			"root",
-			"password",
-			"mydatabase",
-			"5432",
-		)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-		store = storage.New(
-			"db",
-			os.Getenv("USER"),
-			os.Getenv("PASSWORD"),
-			os.Getenv("DBNAME"),
-			os.Getenv("DBPORT"),
-		)
+	url := fmt.Sprintf("postgres://%v:%v@%v:%v/%v",
+		os.Getenv("DBUSER"),
+		os.Getenv("DBPASSWORD"),
+		os.Getenv("DBHOST"),
+		os.Getenv("DBPORT"),
+		os.Getenv("DBNAME"),
+	)
+
+	// Default if nothing is set.
+	if _, exists := os.LookupEnv("DBUSER"); !exists {
+		url = "postgres://root:password@localhost:5432/dststats"
 	}
 
-	svc := service.New(store)
+	svc := service.New(storage.New(url))
 
 	// CORS
 	config := cors.DefaultConfig()

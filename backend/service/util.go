@@ -1,8 +1,9 @@
 package service
 
 import (
-	"dontstarve-stats/model"
 	"sort"
+
+	"github.com/ResamVi/dontstarve-datavis/model"
 )
 
 // convert map to chart.js data format (array of tuples) format

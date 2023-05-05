@@ -1,56 +1,51 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	"dontstarve-stats/alert"
-	"dontstarve-stats/fetch/fetcher"
-	"dontstarve-stats/service"
-
-	"dontstarve-stats/storage"
+	"github.com/ResamVi/dontstarve-datavis/alert"
+	"github.com/ResamVi/dontstarve-datavis/fetch/fetcher"
+	"github.com/ResamVi/dontstarve-datavis/service"
+	"github.com/ResamVi/dontstarve-datavis/storage"
 )
 
 func main() {
-	defer alert.Msg("Service 'fetcher' has stopped running")
+	defer alert.String("Service 'fetcher' has stopped running")
 
-	var store storage.Store
+	url := fmt.Sprintf("postgres://%v:%v@%v:%v/%v",
+		os.Getenv("DBUSER"),
+		os.Getenv("DBPASSWORD"),
+		os.Getenv("DBHOST"),
+		os.Getenv("DBPORT"),
+		os.Getenv("DBNAME"),
+	)
 
-	if !isProd() {
-		store = storage.New(
-			"localhost",
-			"root",
-			"password",
-			"dststats",
-			"5432",
-		)
-
-		os.Setenv("TOKEN", "<TOKEN HERE>")
-	} else {
-		store = storage.New(
-			"db",
-			os.Getenv("USER"),
-			os.Getenv("PASSWORD"),
-			os.Getenv("DBNAME"),
-			os.Getenv("DBPORT"),
-		)
+	// Default if nothing is set.
+	if _, exists := os.LookupEnv("DBUSER"); !exists {
+		url = "postgres://root:password@localhost:5432/dststats"
 	}
 
-	fetch := fetcher.New(os.Getenv("TOKEN"))
+	fetch := fetcher.New()
 
-	svc := service.New(store)
+	svc := service.New(storage.New(url))
 
 	log.Info("Start fetching from Klei's servers...")
 
 	previousCycle := time.Now()
 	for {
 		start := time.Now()
-		servers := fetch.Servers()
+		servers, err := fetch.Fetch()
+		if err != nil {
+			alert.Error(err)
+			continue
+		}
 
 		if len(servers) == 0 {
-			log.Infof("No servers found. Trying again.")
+			alert.String("No servers found")
 			continue
 		}
 
@@ -70,11 +65,4 @@ func main() {
 
 		time.Sleep(15 * time.Minute)
 	}
-}
-
-// docker run --rm --name postgrestmp --network="host" -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase postgres
-
-func isProd() bool {
-	_, isProd := os.LookupEnv("PROD")
-	return isProd
 }
