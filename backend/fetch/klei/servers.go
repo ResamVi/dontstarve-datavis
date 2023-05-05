@@ -65,10 +65,10 @@ func (d Server) Location(geoip *geoip2.Reader) (string, string, string) {
 func Servers(lobby []LobbyEntry, region string) ([]Server, int) {
 	var result []Server
 
-	wp := workerpool.New(100)
+	wp := workerpool.New(1000)
 
 	ch := make(chan struct{}, len(lobby))
-	for _, entry := range lobby[:200] { // TODO: temp
+	for _, entry := range lobby {
 		wp.Submit(func() {
 			details, err := readEntry(entry, region)
 			if err != nil {

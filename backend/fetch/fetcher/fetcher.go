@@ -44,7 +44,7 @@ func (f *Fetcher) Fetch() ([]model.Server, error) {
 	}
 
 	result := make([]model.Server, 0)
-	for _, entry := range servers { // TODO: Temporary
+	for _, entry := range servers {
 		country, continent, iso := entry.Location(f.geoip)
 
 		server := model.Server{
