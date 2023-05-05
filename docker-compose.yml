@@ -14,7 +14,7 @@ services:
     environment:
       - DBUSER=${DBUSER:-root}
       - DBPASSWORD=${DBPASSWORD:-password}
-      - DBHOST=${DBHOST:-postgres}
+      - DBHOST=${DBHOST:-dstpostgres}
       - DBNAME=${DBNAME:-dststats}
       - DBPORT=${DBPORT:-5432}
       - TOKEN=${DST:-sample-token}
@@ -35,12 +35,12 @@ services:
     environment:
       - DBUSER=${DBUSER:-root}
       - DBPASSWORD=${DBPASSWORD:-password}
-      - DBHOST=${DBHOST:-postgres}
+      - DBHOST=${DBHOST:-dstpostgres}
       - DBNAME=${DBNAME:-dststats}
       - DBPORT=${DBPORT:-5432}
 
-  postgres:
-    container_name: "postgres"
+  dstpostgres:
+    container_name: "dstpostgres"
     image: "postgres:latest"
     restart: always
     environment:
