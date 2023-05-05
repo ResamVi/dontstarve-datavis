@@ -1,7 +1,7 @@
 package service
 
 import (
-	"dontstarve-stats/storage"
+	"github.com/ResamVi/dontstarve-datavis/storage"
 )
 
 // Service Layer

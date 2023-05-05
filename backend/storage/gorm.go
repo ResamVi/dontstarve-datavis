@@ -1,19 +1,18 @@
 package storage
 
 import (
-	"fmt"
 	"time"
-
-	"dontstarve-stats/model"
 
 	log "github.com/sirupsen/logrus"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/ResamVi/dontstarve-datavis/alert"
+	"github.com/ResamVi/dontstarve-datavis/model"
 )
 
-// TODO: embedd interface
 type Store interface {
 	GetAge() time.Time
 	Start() // Call to keep track of the age of the data
@@ -43,17 +42,11 @@ type Gorm struct {
 	db *gorm.DB
 }
 
-func New(host, user, password, dbname, dbport string) Store {
-	dataSourceName := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Berlin",
-		host, user, password, dbname, dbport,
-	)
-
+func New(url string) Store {
 	var db *gorm.DB
 	var err error
 	for i := 0; i < 5; i++ {
-
-		db, err = gorm.Open(postgres.Open(dataSourceName), &gorm.Config{
+		db, err = gorm.Open(postgres.Open(url), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent), // Error, Warn, Info
 		})
 
@@ -68,9 +61,8 @@ func New(host, user, password, dbname, dbport string) Store {
 
 	if err != nil {
 		log.Panicf("Could not connect do database: %s", err.Error())
-	} else {
-		log.Info("Connection to database succesful")
 	}
+	log.Info("Connection to database successful")
 
 	db.AutoMigrate(
 		&model.Server{},
@@ -126,6 +118,7 @@ func (gorm Gorm) DeleteAllPlayers() {
 func (gorm Gorm) CreateServers(servers []model.Server) {
 	err := gorm.db.CreateInBatches(servers, 100).Error
 	if err != nil {
+		alert.String("failed CreateServer")
 		panic(err)
 	}
 }

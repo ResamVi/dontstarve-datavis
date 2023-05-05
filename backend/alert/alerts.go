@@ -1,19 +1,37 @@
 package alert
 
 import (
-	log "github.com/sirupsen/logrus"
+	"fmt"
+	"os"
 
 	"github.com/ecnepsnai/discord"
+	log "github.com/sirupsen/logrus"
 )
 
-func Msg(content string) {
-	discord.WebhookURL = ""
-	discord.Say(content)
-	log.Println(content)
+// String sends a discord bot message to
+// my notification channel for me to notice the server is down.
+func String(content string) {
+	log.Info(content)
+
+	e := os.Getenv("DISCORD_WEBHOOK_URL")
+	discord.WebhookURL = e
+	_ = discord.Say(content)
 }
 
-func Panic(content string) {
-	discord.WebhookURL = ""
-	discord.Say(content)
-	panic(content)
+func Stringf(content string, a ...any) {
+	log.Info(fmt.Sprintf(content, a))
+
+	e := os.Getenv("DISCORD_WEBHOOK_URL")
+	discord.WebhookURL = e
+	_ = discord.Say(fmt.Sprintf(content, a))
+}
+
+// Error sends a discord bot message to my
+// notification channel for me to notice the server is down.
+func Error(err error) {
+	log.Errorln(err.Error())
+
+	e := os.Getenv("DISCORD_WEBHOOK_URL")
+	discord.WebhookURL = e
+	_ = discord.Say(err.Error())
 }

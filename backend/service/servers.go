@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"dontstarve-stats/model"
+	"github.com/ResamVi/dontstarve-datavis/model"
 )
 
 func (s Service) LastUpdate() float64 {
@@ -58,7 +58,6 @@ func (s Service) CountIntent() []model.Item {
 	return result
 }
 
-//
 func (s Service) CountPlatform() []model.Item {
 	servers := s.store.GetAllServers()
 

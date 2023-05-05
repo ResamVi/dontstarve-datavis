@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"dontstarve-stats/model"
+	"github.com/ResamVi/dontstarve-datavis/model"
 )
 
 // CountPlayers returns the total players online

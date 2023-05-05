@@ -2,64 +2,55 @@ version: '3'
 
 services:
   web:
-    container_name: "dstweb"
+    container_name: "web"
     build: "web/."
     restart: always
     ports:
       - "127.0.0.1:83:80"
-    #networks:
-    #  - main
 
   fetcher:
-    container_name: "dstfetcher"
+    container_name: "fetcher"
     restart: always
-    environment: 
-      - USER=root
-      - PASSWORD=password
-      - DBNAME=dststats
-      - DBPORT=5432
-      - TOKEN=${DST}
+    environment:
+      - DBUSER=${DBUSER:-root}
+      - DBPASSWORD=${DBPASSWORD:-password}
+      - DBHOST=${DBHOST:-postgres}
+      - DBNAME=${DBNAME:-dststats}
+      - DBPORT=${DBPORT:-5432}
+      - TOKEN=${DST:-sample-token}
+      # Alerting is done via messages to a discord channel
+      - DISCORD_WEBHOOK_URL=$DISCORD_WEBHOOK_URL
     build:
       context: backend
       dockerfile: "fetch/Dockerfile"
-    #networks:
-    #  - main
 
-  server:
-    container_name: "dstserver"
+  api:
+    container_name: "api"
     build: 
       context: backend
       dockerfile: "api/Dockerfile"
     restart: always
     ports: 
       - "127.0.0.1:8003:8003"
-    environment: 
-      - USER=root
-      - PASSWORD=password
-      - DBNAME=dststats
-      - DBPORT=5432
-    #networks:
-    #  - main
+    environment:
+      - DBUSER=${DBUSER:-root}
+      - DBPASSWORD=${DBPASSWORD:-password}
+      - DBHOST=${DBHOST:-postgres}
+      - DBNAME=${DBNAME:-dststats}
+      - DBPORT=${DBPORT:-5432}
 
-  # docker run --rm --name postgres_tmp --network="host" -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase postgres
-  db:
-    container_name: "dstpostgres"
+  postgres:
+    container_name: "postgres"
     image: "postgres:latest"
     restart: always
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dststats
+      - POSTGRES_USER=${DBUSER:-root}
+      - POSTGRES_PASSWORD=${DBPASSWORD:-password}
+      - POSTGRES_DB=${DBNAME:-dststats}
     volumes:
       - dst-data:/var/lib/postgresql/data
     ports:
       - '127.0.0.1:5432:5432'
-    #networks:
-    #  - main
 
 volumes: 
   dst-data:
-
-#networks:
-  #main:
-    #external: true
