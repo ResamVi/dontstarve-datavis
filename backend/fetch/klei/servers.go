@@ -62,17 +62,15 @@ func (d Server) Location(geoip *geoip2.Reader) (string, string, string) {
 	return record.Country.Names["en"], record.Continent.Names["en"], record.Country.IsoCode
 }
 
-func Servers(lobby []LobbyEntry, region string) ([]Server, int) {
+func Servers(lobby []LobbyEntry, region string) []Server {
 	var result []Server
 
 	wp := workerpool.New(1000)
 
-	ch := make(chan struct{}, len(lobby))
 	for _, entry := range lobby {
 		wp.Submit(func() {
 			details, err := readEntry(entry, region)
 			if err != nil {
-				ch <- struct{}{}
 				return
 			}
 
@@ -83,12 +81,7 @@ func Servers(lobby []LobbyEntry, region string) ([]Server, int) {
 	wp.StopWait()
 
 	// Atomic counter did not work. Poor try at counting errors.
-	count := 0
-	for len(ch) > 0 {
-		count++
-	}
-
-	return result, count
+	return result
 }
 
 // token as per https://forums.kleientertainment.com/forums/topic/115578-retrieving-dst-server-data

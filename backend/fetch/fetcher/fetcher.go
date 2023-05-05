@@ -96,10 +96,10 @@ func getServers() ([]klei.Server, error) {
 		log.Infof("Found %v servers", len(lobby))
 
 		// Collect the details (player info etc.) of each server.
-		servers, count := klei.Servers(lobby, region)
+		servers := klei.Servers(lobby, region)
 		result = append(result, servers...)
 
-		log.Infof("Parsed in %.2fs with %v/%v failing", time.Since(start).Seconds(), count, len(servers))
+		log.Infof("Parsed in %.2fs with %v/%v failing", time.Since(start).Seconds(), len(lobby)-len(servers), len(lobby))
 	}
 
 	return result, nil
