@@ -1,9 +1,11 @@
 package fetcher
 
 import (
+	"cmp"
 	_ "embed"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"time"
 
@@ -38,7 +40,7 @@ func New() *Fetcher {
 // If it cannot do any of those things it will fail silently: this
 // behavior is intended to keep running but simply skip one cycle.
 func (f *Fetcher) Fetch() ([]model.Server, error) {
-	servers, err := getServers()
+	servers, err := GetServers()
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +76,8 @@ func (f *Fetcher) Fetch() ([]model.Server, error) {
 	return result, nil
 }
 
-// getServers reads from all of klei's endpoints.
-func getServers() ([]klei.Server, error) {
+// GetServers reads from all of klei's endpoints.
+func GetServers() ([]klei.Server, error) {
 	regions, err := klei.Regions()
 	if err != nil {
 		return nil, fmt.Errorf("could not get regions: %w", err)
@@ -101,6 +103,14 @@ func getServers() ([]klei.Server, error) {
 
 		log.Infof("Parsed in %.2fs with %v/%v failing", time.Since(start).Seconds(), len(lobby)-len(servers), len(lobby))
 	}
+
+	// Remove duplicates
+	slices.SortFunc(result, func(a, b klei.Server) int {
+		return cmp.Compare(a.Addr, b.Addr)
+	})
+	result = slices.CompactFunc(result, func(a, b klei.Server) bool {
+		return a.Addr == b.Addr
+	})
 
 	return result, nil
 }
